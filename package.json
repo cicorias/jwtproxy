@@ -1,0 +1,24 @@
+{
+  "name": "jwtproxy",
+  "version": "0.1.0",
+  "description": "simple jwt validation proxy for express",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cicorias/jwtproxy.git"
+  },
+  "keywords": [
+    "jwt",
+    "validation",
+    "proxy"
+  ],
+  "author": "Shawn Cicoria <github@cicoria.com> (https://cicoria.com)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/cicorias/jwtproxy/issues"
+  },
+  "homepage": "https://github.com/cicorias/jwtproxy#readme"
+}
