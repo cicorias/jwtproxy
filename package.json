@@ -11,16 +11,16 @@
     "postversion": "git push && git push --tags && rm -rf build/temp"
   },
   "files": [
-    "./src",
-    "./build",
-    "./tests",
-    "./.gitignore",
-    "./CODE_OF_CONDUCT.md",
-    "./LICENSE",
-    "./package-lock.json",
-    "./package.json",
-    "./README.md",
-    "./tsconfig.json"
+    "src/",
+    "dist/",
+    "tests/",
+    ".gitignore",
+    "CODE_OF_CONDUCT.md",
+    "LICENSE",
+    "package-lock.json",
+    "package.json",
+    "README.md",
+    "tsconfig.json"
   ],
   "repository": {
     "type": "git",
