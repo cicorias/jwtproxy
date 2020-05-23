@@ -2,10 +2,26 @@
   "name": "jwtproxy",
   "version": "0.1.0",
   "description": "simple jwt validation proxy for express",
-  "main": "index.js",
+  "main": "./build/index.js",
   "scripts": {
-    "test": "npm run test"
+    "build": "tsc --build .",
+    "test": "mocha ./tests",
+    "preversion": "npm test",
+    "version": "npm run build && git add -Af dist",
+    "postversion": "git push && git push --tags && rm -rf build/temp"
   },
+  "files": [
+    "./src",
+    "./build",
+    "./tests",
+    "./.gitignore",
+    "./CODE_OF_CONDUCT.md",
+    "./LICENSE",
+    "./package-lock.json",
+    "./package.json",
+    "./README.md",
+    "./tsconfig.json"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cicorias/jwtproxy.git"
