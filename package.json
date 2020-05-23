@@ -20,5 +20,15 @@
   "bugs": {
     "url": "https://github.com/cicorias/jwtproxy/issues"
   },
-  "homepage": "https://github.com/cicorias/jwtproxy#readme"
+  "homepage": "https://github.com/cicorias/jwtproxy#readme",
+  "devDependencies": {
+    "mocha": "^7.1.2",
+    "supertest": "^4.0.2",
+    "typescript": "^3.9.3"
+  },
+  "dependencies": {
+    "debug": "^4.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^1.8.0"
+  }
 }
