@@ -73,7 +73,8 @@
     "node_modules"
   ],
   "typeAcquisition": {
-    "enable": true
+   // "enable": true, 
+    "exclude": ["dotenv"]
   },
   "ts-node": {
     "pretty": true
