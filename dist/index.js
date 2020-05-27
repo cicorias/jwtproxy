@@ -38,15 +38,11 @@ function jwtProxy(options) {
             }
             const token = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
             logger('got token: %s', token);
-            try {
-                const decodedToken = jsonwebtoken_1.default.verify(token, '');
-            }
-            catch (error) {
-                logDebug(colors_1.default.red('failed jwt validation %o'), error.message);
-            }
+            const decodedToken = jsonwebtoken_1.default.verify(token, 'sharedsecret');
             next();
         }
         catch (error) {
+            logDebug(colors_1.default.red('failed jwt validation %o'), error.message);
             response.set({
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Expires': '-1',
@@ -54,7 +50,6 @@ function jwtProxy(options) {
                 'X-Frame-Options': 'DENY',
                 'X-XSS-Protection': '1',
             }).status(failedCode).send();
-            // response.sendStatus(401);
         }
     };
 }
