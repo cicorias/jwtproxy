@@ -8,6 +8,8 @@
     "dev:static": "ts-node ./src/server.ts",
     "dev": "nodemon",
     "test": "mocha -r ts-node/register -r mocha-clean tests/**/*.ts",
+    "test:setup": "mocha -r ts-node/register -r mocha-clean tests/**/jwt_setup_tests.ts",
+    "test:watch": "npm run test -- --watch",
     "preversion": "npm test",
     "version": "npm run build && git add -Af dist",
     "postversion": "git push && git push --tags && rm -rf build/temp"

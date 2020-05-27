@@ -2,10 +2,11 @@ import dotenv from 'dotenv';
 import debug from 'debug';
 import colors from 'colors';
 import { NextFunction, Request, Response, RequestHandler } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { VerifyOptions, Algorithm } from 'jsonwebtoken';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HttpException, NoJwtException } from './HttpException';
+import { getVerifyOptions } from './JwksHelper';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const logDebug = debug('jwtproxy:debug')
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
 
-function jwtProxy(options?: jwtProxyOptions): RequestHandler {
+function jwtProxy(options?: JwtProxyOptions): RequestHandler {
   return async function jwtVerifyMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
     /** note that we provide the error to the next() function to allow 
      * default express or the defined error handler to handle the error. for express
@@ -38,17 +39,30 @@ function jwtProxy(options?: jwtProxyOptions): RequestHandler {
         throw new NoJwtException();
       }
 
+      //grap token from the header
       const token: string = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
-      logger('got token: %s', token);
 
-      
+      //pre-flight decode to get the kid, alg.
+      const preFlightToken = jwt.decode(token, {complete: true});
 
-      const decodedToken = jwt.verify(token, 'sharedsecret');
+      let alg:Algorithm = 'HS256';
+
+      if (tokenHeader && typeof tokenHeader == 'object' && tokenHeader['header'] && tokenHeader['header']['alg']) {
+        alg = tokenHeader['header']['alg'];
+      }
+
+      logDebug(colors.red('tokenHeader %o'), alg);
+
+
+      //TODO: need a factory...
+      const verifyOption = await getVerifyOptions(options);
+
+      const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
       next();
 
     }
     catch (error) {
-      logDebug(colors.red('failed jwt validation %o'), error.message);
+      logger(colors.red('failed jwt validation %o'), error.message);
       response.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Expires': '-1',
@@ -57,23 +71,38 @@ function jwtProxy(options?: jwtProxyOptions): RequestHandler {
         'X-XSS-Protection': '1',
       }).status(failedCode).send();
     }
-
-
   }
 }
 
 export default jwtProxy;
 
-export interface jwtProxyOptions {
+export type fff = string | { [key: string]:never}
+
+
+/** Options for THIS middlware */
+export interface JwtProxyOptions {
   secretOrKey?: string,
-  aud?: string,
-  jwksUrl?: string
+  audience?: string,
+  jwksUrl?: string,
+  algorithms: Algorithm[]
 }
 
-export interface jwksOptions {
+
+/** Options for jsonwebtoken library */
+export interface JwtVerifyOptions {
+  algorithms?: Algorithm[], //'RS256', //default HS256
+  audience?: string,
+  subject?: string,
+  clockTolerance?: number,
+  maxAge?: number,
+  nonce?: string
+}
+
+/** Options for the jwks-rsa library */
+export interface JwksOptions {
   jwksUri?: string,
-  requestHeaders?: object,
-  requestAgentOptions?: object,
+  requestHeaders?: Record<string, undefined>,
+  requestAgentOptions?: Record<string, undefined>,
   timeout?: number,
   proxy?: string
 }
@@ -99,7 +128,6 @@ declare namespace Express {
     user: string,
     aud: string
   }
-
   export interface Response {
     jwtverify: JwtVerify
   }

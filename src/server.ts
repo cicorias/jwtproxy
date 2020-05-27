@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import jwtProxy, { jwtProxyOptions } from './index'
+import jwtProxy, { JwtProxyOptions } from './index'
 
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
 
@@ -87,8 +87,8 @@ class App {
   }
 }
 
-const options: jwtProxyOptions = {
-
+const options: JwtProxyOptions = {
+  algorithms: ['RS256', 'HS256']
 }
 
 const appWrapper = new App({

@@ -9,6 +9,7 @@ const colors_1 = __importDefault(require("colors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
+const JwksHelper_1 = require("./JwksHelper");
 dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy:info');
 const logDebug = debug_1.default('jwtproxy:debug');
@@ -36,13 +37,22 @@ function jwtProxy(options) {
                 //response.statusCode = failedCode;
                 throw new HttpException_1.NoJwtException();
             }
+            //grap token from the header
             const token = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
-            logger('got token: %s', token);
-            const decodedToken = jsonwebtoken_1.default.verify(token, 'sharedsecret');
+            //pre-flight decode to get the kid, alg.
+            const preFlightToken = jsonwebtoken_1.default.decode(token, { complete: true });
+            let alg = 'HS256';
+            if (tokenHeader && typeof tokenHeader == 'object' && tokenHeader['header'] && tokenHeader['header']['alg']) {
+                alg = tokenHeader['header']['alg'];
+            }
+            logDebug(colors_1.default.red('tokenHeader %o'), alg);
+            //TODO: need a factory...
+            const verifyOption = await JwksHelper_1.getVerifyOptions(options);
+            const decodedToken = jsonwebtoken_1.default.verify(token, 'sharedsecret', verifyOption);
             next();
         }
         catch (error) {
-            logDebug(colors_1.default.red('failed jwt validation %o'), error.message);
+            logger(colors_1.default.red('failed jwt validation %o'), error.message);
             response.set({
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Expires': '-1',
