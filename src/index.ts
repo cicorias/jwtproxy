@@ -41,17 +41,15 @@ function jwtProxy(options?: jwtProxyOptions): RequestHandler {
       const token: string = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
       logger('got token: %s', token);
 
-      try {
-        const decodedToken = jwt.verify(token, '');
-      }
-      catch (error) {
-        logDebug(colors.red('failed jwt validation %o'), error.message);
-      }
+
+      const decodedToken = jwt.verify(token, '');
+
 
       next();
 
     }
     catch (error) {
+      logDebug(colors.red('failed jwt validation %o'), error.message);
       response.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Expires': '-1',
@@ -72,6 +70,14 @@ export interface jwtProxyOptions {
   secretOrKey?: string,
   aud?: string,
   jwksUrl?: string
+}
+
+export interface jwksOptions {
+  jwksUri?: string,
+  requestHeaders?: object,
+  requestAgentOptions?: object,
+  timeout?: number,
+  proxy?: string
 }
 
 

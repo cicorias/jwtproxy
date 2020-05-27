@@ -113,7 +113,7 @@ describe('test all http VERBS are intercepted', function () {
                 .set('Accept', 'application/json')
                 .expect(401, done);
         });
-        it('HEAD should be 200', function (done) {
+        it('HEAD should be 401', function (done) {
             request(app)
                 .head(path)
                 .set('Accept', 'application/json')
