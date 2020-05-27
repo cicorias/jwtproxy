@@ -41,10 +41,9 @@ function jwtProxy(options?: jwtProxyOptions): RequestHandler {
       const token: string = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
       logger('got token: %s', token);
 
+      
 
-      const decodedToken = jwt.verify(token, '');
-
-
+      const decodedToken = jwt.verify(token, 'sharedsecret');
       next();
 
     }
@@ -57,7 +56,6 @@ function jwtProxy(options?: jwtProxyOptions): RequestHandler {
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1',
       }).status(failedCode).send();
-      // response.sendStatus(401);
     }
 
 
