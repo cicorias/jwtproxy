@@ -5,8 +5,9 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build .",
-    "dev": "ts-node ./src/server.ts",
-    "test": "mocha ./tests",
+    "dev:static": "ts-node ./src/server.ts",
+    "dev": "nodemon",
+    "test": "mocha -r ts-node/register tests/**/*.ts",
     "preversion": "npm test",
     "version": "npm run build && git add -Af dist",
     "postversion": "git push && git push --tags && rm -rf build/temp"
@@ -39,9 +40,14 @@
   },
   "homepage": "https://github.com/cicorias/jwtproxy#readme",
   "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/debug": "^4.1.5",
     "@types/jsonwebtoken": "^8.5.0",
-    "@typescript-eslint/eslint-plugin": "^3.0.0",
-    "@typescript-eslint/parser": "^3.0.0",
+    "@types/mocha": "^7.0.2",
+    "@types/supertest": "^2.0.9",
+    "@typescript-eslint/eslint-plugin": "^3.0.1",
+    "@typescript-eslint/parser": "^3.0.1",
+    "chai": "^4.2.0",
     "eslint": "^7.1.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.2",
@@ -50,6 +56,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "express": "^4.17.1",
     "mocha": "^7.1.2",
+    "nodemon": "^2.0.4",
     "supertest": "^4.0.2",
     "ts-node": "^8.10.1",
     "typescript": "^3.9.3"
