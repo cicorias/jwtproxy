@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import jwtProxy from './index'
+import jwtProxy, { jwtProxyOptions } from './index'
 
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
 
@@ -87,6 +87,10 @@ class App {
   }
 }
 
+const options: jwtProxyOptions = {
+
+}
+
 const appWrapper = new App({
   port: (!process.env.PORT) ? 5000 : parseInt(process.env.PORT),
   controllers: [
@@ -95,7 +99,7 @@ const appWrapper = new App({
   ],
   middleWares: [
     // bodyParser.json(),
-    jwtProxy("foo"), //jwtVerifyMiddleware,
+    jwtProxy(options), //jwtVerifyMiddleware,
     // bodyParser.urlencoded({ extended: true }),
     loggerMiddleware
   ]

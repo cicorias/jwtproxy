@@ -7,7 +7,7 @@
     "build": "tsc --build .",
     "dev:static": "ts-node ./src/server.ts",
     "dev": "nodemon",
-    "test": "mocha -r ts-node/register tests/**/*.ts",
+    "test": "mocha -r ts-node/register -r mocha-clean tests/**/*.ts",
     "preversion": "npm test",
     "version": "npm run build && git add -Af dist",
     "postversion": "git push && git push --tags && rm -rf build/temp"
@@ -57,6 +57,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "express": "^4.17.1",
     "mocha": "^7.1.2",
+    "mocha-clean": "^1.0.0",
     "nodemon": "^2.0.4",
     "supertest": "^4.0.2",
     "ts-node": "^8.10.1",

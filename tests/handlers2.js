@@ -5,6 +5,8 @@ var colors = require('colors');
 module.exports = {
   get: function (req, res) {
     console.log(colors.green('\tin the handler for get'));
+    const authHeader = request.get('Authorization');
+    console.error(colors.red('Authorization header is: %s', authHeader));
     res.status(200).json({ message: 'you made it' });
     // next();
   },
