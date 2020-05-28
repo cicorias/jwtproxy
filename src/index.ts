@@ -33,7 +33,7 @@ function jwtProxy(options?: JwtProxyOptions): RequestHandler {
         throw new NoJwtException();
       }
 
-      if (!authHeader?.startsWith(tokenPrefix)) {
+      if (!authHeader.startsWith(tokenPrefix)) {
         logger('%s prefix absent - returning 401: %o', tokenPrefix, authHeader);
         //response.statusCode = failedCode;
         throw new NoJwtException();
@@ -47,17 +47,17 @@ function jwtProxy(options?: JwtProxyOptions): RequestHandler {
 
       let alg:Algorithm = 'HS256';
 
-      if (tokenHeader && typeof tokenHeader == 'object' && tokenHeader['header'] && tokenHeader['header']['alg']) {
-        alg = tokenHeader['header']['alg'];
+      if (preFlightToken && typeof preFlightToken == 'object' && preFlightToken['header'] && preFlightToken['header']['alg']) {
+        alg = preFlightToken['header']['alg'];
       }
 
-      logDebug(colors.red('tokenHeader %o'), alg);
+      logDebug(colors.red('preFlightToken %o'), alg);
 
 
       //TODO: need a factory...
-      const verifyOption = await getVerifyOptions(options);
+      //const verifyOption = await getVerifyOptions(options);
 
-      const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
+      //const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
       next();
 
     }

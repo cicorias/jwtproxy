@@ -29,10 +29,10 @@ export async function getVerifyOptions( token:fff, options?:JwtProxyOptions) : P
 
 
 
-  if (options?.audience)
+  if (options && options.audience)
     rv.audience = options.audience;
 
-  if (options?.jwksUrl) {
+  if (options && options.jwksUrl) {
     const clientOptions: ClientOptions = {
       jwksUri : options.jwksUrl
     };

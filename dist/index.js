@@ -9,7 +9,6 @@ const colors_1 = __importDefault(require("colors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
-const JwksHelper_1 = require("./JwksHelper");
 dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy:info');
 const logDebug = debug_1.default('jwtproxy:debug');
@@ -32,7 +31,7 @@ function jwtProxy(options) {
                 //TODO: entire stack trace.
                 throw new HttpException_1.NoJwtException();
             }
-            if (!(authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith(tokenPrefix))) {
+            if (!authHeader.startsWith(tokenPrefix)) {
                 logger('%s prefix absent - returning 401: %o', tokenPrefix, authHeader);
                 //response.statusCode = failedCode;
                 throw new HttpException_1.NoJwtException();
@@ -42,13 +41,13 @@ function jwtProxy(options) {
             //pre-flight decode to get the kid, alg.
             const preFlightToken = jsonwebtoken_1.default.decode(token, { complete: true });
             let alg = 'HS256';
-            if (tokenHeader && typeof tokenHeader == 'object' && tokenHeader['header'] && tokenHeader['header']['alg']) {
-                alg = tokenHeader['header']['alg'];
+            if (preFlightToken && typeof preFlightToken == 'object' && preFlightToken['header'] && preFlightToken['header']['alg']) {
+                alg = preFlightToken['header']['alg'];
             }
-            logDebug(colors_1.default.red('tokenHeader %o'), alg);
+            logDebug(colors_1.default.red('preFlightToken %o'), alg);
             //TODO: need a factory...
-            const verifyOption = await JwksHelper_1.getVerifyOptions(options);
-            const decodedToken = jsonwebtoken_1.default.verify(token, 'sharedsecret', verifyOption);
+            //const verifyOption = await getVerifyOptions(options);
+            //const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
             next();
         }
         catch (error) {
