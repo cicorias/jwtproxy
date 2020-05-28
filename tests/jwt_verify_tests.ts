@@ -2,31 +2,19 @@
 import { expect } from 'chai';
 // import assert from 'assert';
 import 'mocha';
-import express, { Router, Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import colors from 'colors';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const handlers = require('./handlers2');
-
+import {genericHandlers} from './handlers2';
 import jwtProxy, { JwtProxyOptions } from '../src/index'
 
-function genericHandlers(router: Router, path: string) {
-  router.get(path, handlers.get);
-  router.post(path, handlers.post);
-  router.put(path, handlers.put);
-  router.head(path, handlers.head);
-  router.options(path, handlers.options);
-  return router;
-}
-
-describe('test all http VERBS are intercepted', function () {
-
+describe.skip('test all http VERBS are intercepted', function () {
   describe('GET / header presence first ', () => {
     const app = express();
     const router = express.Router();
     const path = '/';
-    process.env.NODE_ENV='production';
 
     before(function () {
       router.all('*', jwtProxy());
@@ -45,21 +33,35 @@ describe('test all http VERBS are intercepted', function () {
         console.error(colors.blue("my error handler"));
       })
     });
-    it('should return 401', async () => {
+
+    it('GET should return 401', async () => {
       const result = await request(app).get('/');
       expect(result.status).to.eq(401);
-      
     });
-      
-    it('should return 401', async () => {
-      const result = await request(app).get('/users');
+    it('POST should return 401', async () => {
+      const result = await request(app).post('/');
+      expect(result.status).to.eq(401);
+    });
+    it('PUT should return 401', async () => {
+      const result = await request(app).put('/');
+      expect(result.status).to.eq(401);
+    });
+    it('OPTIONS should return 401', async () => {
+      const result = await request(app).options('/');
+      expect(result.status).to.eq(401);
+    });
+    it('HEAD should return 401', async () => {
+      const result = await request(app).head('/');
+      expect(result.status).to.eq(401);
+    });
+    it('DELETE should return 401', async () => {
+      const result = await request(app).delete('/');
       expect(result.status).to.eq(401);
     });
   });
 
-
   /** tests expected to fail due to signature or key differences */
-  describe('different signature', function () {
+  describe.skip('different signature', function () {
     const app = express();
     const router = express.Router();
     const secret = 'nonsharedsecret';
@@ -100,18 +102,6 @@ describe('test all http VERBS are intercepted', function () {
     it('POST should be 401', function (done) {
       request(app)
         .post(path)
-        .set('Accept', 'application/json')
-        .expect(401, done);
-    });
-    it('HEAD should be 401', function (done) {
-      request(app)
-        .head(path)
-        .set('Accept', 'application/json')
-        .expect(401, done);
-    });
-    it('OPTION should be 401', function (done) {
-      request(app)
-        .options(path)
         .set('Accept', 'application/json')
         .expect(401, done);
     });

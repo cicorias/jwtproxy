@@ -17,12 +17,24 @@ describe('Check if PEM and Jwks files are present',() => {
         return 'need to run generateJwksTestFiles.sh ...a'
       });
     
-    console.error('what i got', rv);
+    //console.error('what i got', rv);
     expect(rv).equal('OK');
   });
 
   it('file private.pem exists', async () => {
     const rv = await readFile('./tests/private.pem')
+      .then(() => {
+        return 'OK';
+      })
+      .catch(() => {
+        return 'need to run generateJwksTestFiles.sh ...a'
+      });
+    
+    expect(rv).equal('OK');
+  });
+
+  it('file public.pem exists', async () => {
+    const rv = await readFile('./tests/public.pem')
       .then(() => {
         return 'OK';
       })

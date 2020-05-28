@@ -14,18 +14,18 @@ const logger = debug_1.default('jwtproxy:info');
 const logDebug = debug_1.default('jwtproxy:debug');
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
-function jwtProxy(options) {
+function jwtProxy(proxyOptions) {
     return async function jwtVerifyMiddleware(request, response, next) {
         /** note that we provide the error to the next() function to allow
          * default express or the defined error handler to handle the error. for express
          * you must override the handler or provide env variable NODE_ENV=production if you
          * desire to NOT have the stack trace emitted.
         */
-        logger('verifying a jwt token with options %o' + options);
+        logger('verifying a jwt token with options %o' + proxyOptions);
         const authHeader = request.headers.authorization; //.authorization.get('Authorization');
         try {
             if (authHeader === undefined || authHeader === null) {
-                logger('authHeader is null/absent - returning 401: %o', authHeader);
+                logger('authHeader is null or absent - returning 401: %o', authHeader);
                 //response.statusCode = failedCode;
                 //TODO: can we pass this to next() but suppress annoying mocha output of the 
                 //TODO: entire stack trace.
@@ -47,7 +47,23 @@ function jwtProxy(options) {
             logDebug(colors_1.default.red('preFlightToken %o'), alg);
             //TODO: need a factory...
             //const verifyOption = await getVerifyOptions(options);
-            //const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
+            //setup options
+            const verifyOptions = {};
+            if (proxyOptions) {
+                if (proxyOptions.algorithms) {
+                    verifyOptions.algorithms = proxyOptions.algorithms;
+                }
+                if (proxyOptions.audience) {
+                    verifyOptions.audience = proxyOptions.audience;
+                }
+                if (proxyOptions.issuer) {
+                    verifyOptions.issuer = proxyOptions.issuer;
+                }
+            }
+            const secretOrKey = (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.secretOrKey) ? proxyOptions.secretOrKey : '';
+            console.error('before');
+            const decodedToken = jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions);
+            console.error('fater');
             next();
         }
         catch (error) {

@@ -15,18 +15,18 @@ const logDebug = debug('jwtproxy:debug')
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
 
-function jwtProxy(options?: JwtProxyOptions): RequestHandler {
+function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
   return async function jwtVerifyMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
     /** note that we provide the error to the next() function to allow 
      * default express or the defined error handler to handle the error. for express
      * you must override the handler or provide env variable NODE_ENV=production if you
      * desire to NOT have the stack trace emitted.
     */
-    logger('verifying a jwt token with options %o' + options);
+    logger('verifying a jwt token with options %o' + proxyOptions);
     const authHeader = request.headers.authorization;//.authorization.get('Authorization');
     try {
       if (authHeader === undefined || authHeader === null) {
-        logger('authHeader is null/absent - returning 401: %o', authHeader);
+        logger('authHeader is null or absent - returning 401: %o', authHeader);
         //response.statusCode = failedCode;
         //TODO: can we pass this to next() but suppress annoying mocha output of the 
         //TODO: entire stack trace.
@@ -57,7 +57,27 @@ function jwtProxy(options?: JwtProxyOptions): RequestHandler {
       //TODO: need a factory...
       //const verifyOption = await getVerifyOptions(options);
 
-      //const decodedToken = jwt.verify(token, 'sharedsecret', verifyOption); 
+
+      //setup options
+      const verifyOptions: VerifyOptions = {};
+
+      if (proxyOptions) {
+        if (proxyOptions.algorithms) {
+          verifyOptions.algorithms = proxyOptions.algorithms;
+        }
+        if (proxyOptions.audience){
+          verifyOptions.audience = proxyOptions.audience;
+        }
+        if (proxyOptions.issuer){
+          verifyOptions.issuer = proxyOptions.issuer;
+        }
+      }
+
+      const secretOrKey = (proxyOptions?.secretOrKey) ? proxyOptions.secretOrKey: '';
+
+      console.error('before')
+      const decodedToken = jwt.verify(token, secretOrKey, verifyOptions);
+      console.error('fater')
       next();
 
     }
@@ -83,8 +103,10 @@ export type fff = string | { [key: string]:never}
 export interface JwtProxyOptions {
   secretOrKey?: string,
   audience?: string,
+  issuer?: string,
   jwksUrl?: string,
-  algorithms: Algorithm[]
+  algorithms: Algorithm[],
+  excluded?: string[]
 }
 
 

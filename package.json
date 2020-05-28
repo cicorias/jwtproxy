@@ -9,7 +9,7 @@
     "dev": "nodemon",
     "test": "mocha -r ts-node/register -r mocha-clean tests/**/*.ts",
     "test:setup": "mocha -r ts-node/register -r mocha-clean tests/**/jwt_setup_tests.ts",
-    "test:watch": "watch  -c -n 10 -t npm run test -- --reporter min",
+    "test:watch": "watch  -c npm run test -- --reporter min",
     "preversion": "npm test",
     "version": "npm run build && git add -Af dist",
     "postversion": "git push && git push --tags && rm -rf build/temp"
