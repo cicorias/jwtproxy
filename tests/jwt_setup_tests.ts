@@ -9,7 +9,7 @@ const readFile = util.promisify(fs.readFile);
 
 describe('Check if PEM and Jwks files are present',() => {
   it('file private.jwk exists', async () => {
-    const rv = await readFile('./tests/private.jwk')
+    const rv = await readFile('./tests/private.json')
       .then(() => {
         return 'OK';
       })
