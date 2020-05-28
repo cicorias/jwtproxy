@@ -1,4 +1,6 @@
 
+# Sequence Diagram Jwt Proxy
+
 ```mermaid
 
 sequenceDiagram
@@ -25,6 +27,9 @@ sequenceDiagram
     App-->>-User: ok/not ok
 
 ```
+
+![](./jwt-sequence.png)
+
 
 # Options object
 An option object is optionaly injected at the start. The presence of the `options` object implies that **NO** environment variables are to be used. This permits couple of scenarios
