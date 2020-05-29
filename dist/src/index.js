@@ -86,7 +86,7 @@ function jwtProxy(proxyOptions) {
                 verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
             }
             //TODO: check if it's a url or string...
-            const theKey = JwksHelper_1.getKey(token, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
+            const theKey = JwksHelper_1.getKey(request.jwtToken, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
             if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
                 logger('No matching alogorithm present - returning 401: %o', alg);
                 throw new HttpException_1.InvalidOption();

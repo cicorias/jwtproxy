@@ -29,21 +29,14 @@ async function getKey(jwtToken, jwksUrl) {
     }
     const client = jwks_rsa_1.default(clientOptions);
     const z = util_1.default.promisify(client.getSigningKey);
-    const rv = await z(kid);
+    const rv = await z(kid).then((d) => {
+        console.log(d);
+        return d.getPublicKey();
+    }).catch((err) => {
+        console.error(err);
+    });
+    //TODO: figure out how this story ends...
     return '';
 }
 exports.getKey = getKey;
-// const jwksClient = require('jwks-rsa');
-// const client = jwksClient({
-//   strictSsl: true, // Default value
-//   jwksUri: 'https://sandrino.auth0.com/.well-known/jwks.json',
-//   requestHeaders: {}, // Optional
-//   requestAgentOptions: {}, // Optional
-//   timeout: ms('30s'), // Defaults to 30s
-//   proxy: '[protocol]://[username]:[pass]@[address]:[port]', // Optional
-// });
-// const kid = 'RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg';
-// client.getSigningKey(kid, (err, key) => {
-//   const signingKey = key.getPublicKey();
-// Now I can use this to configure my Express or Hapi middleware
 //# sourceMappingURL=JwksHelper.js.map
