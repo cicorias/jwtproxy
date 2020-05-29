@@ -124,3 +124,7 @@ dist
 
 #build
 build/
+
+#PEM secrets and keys
+tests/private.*
+tests/public.pem
