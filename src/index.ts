@@ -31,9 +31,10 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
     let isExcluded = false;
     if (proxyOptions?.excluded) {
       isExcluded = indexOf(proxyOptions.excluded, request.originalUrl)
-      if (isExcluded)
+      if (isExcluded){
         next();
         return;
+      }
     }
 
     const authHeader = request.headers.authorization;//.authorization.get('Authorization');
@@ -83,13 +84,15 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
       const secretOrKey = (proxyOptions?.secretOrKey) ? proxyOptions.secretOrKey: '';
 
-      console.error('before')
+
       const decodedToken = jwt.verify(token, secretOrKey, verifyOptions);
-      console.error('fater')
+
       next();
+      return;
 
     }
     catch (error) {
+      logger(colors.red('failed jwt validation %o'), error.message);
       response.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Expires': '-1',
@@ -97,16 +100,11 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1',
       }).status(failedCode).send();
-
-      logger(colors.red('failed jwt validation %o'), error.message);
     }
   }
 }
 
 export default jwtProxy;
-
-export type fff = string | { [key: string]:never}
-
 
 /** Options for THIS middlware */
 export interface JwtProxyOptions {

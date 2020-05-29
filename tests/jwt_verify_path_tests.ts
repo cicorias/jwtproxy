@@ -36,7 +36,7 @@ describe('Using a valid token', () => {
     before(function () {
       app.use(jwtProxy(testOptions));
       // mock express handlers
-      //app.use('/', (req,res,n) => { n(); return;})
+      app.use('/', genericHandlers(router, path));
       app.use('/clear', genericHandlers(router, path));
       app.use('/clear/sub', genericHandlers(router, path));
       app.use('/protected', genericHandlers(router, path));
@@ -61,7 +61,7 @@ describe('Using a valid token', () => {
       expect(result.status).to.eq(200);
     });
 
-    it('GET / should return 401', async () => {
+    it('GET / should return 401', async (done) => {
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(401);
@@ -69,12 +69,12 @@ describe('Using a valid token', () => {
 
     it('GET /protected should return 401', async () => {
       const result = await request(app).get('/protected')
-        .set('Authorization', 'Bearer ' + token);
+        //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(401);
     });
     it('GET /protected/sub should return 401', async () => {
       const result = await request(app).get('/protected/sub')
-        .set('Authorization', 'Bearer ' + token);
+        //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(401);
     });
   });
