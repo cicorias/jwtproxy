@@ -37,18 +37,27 @@ An option object is optionaly injected at the start. The presence of the `option
 - Developer and Test scenarios - Test frameworks need to create valid tokens, and the verification needs some key data offline and disconnected at least during unit testing. For develper experience, this allows ease of use whithout the need to standup a signing authority and Jwks Endpoint just to try out the module.
 
 ## Rule for Options
+```
+  secretOrKey?: string,
+  audience?: string, - 'if present also validate'
+  issuer?: string, - 'if present also validate'
+  jwksUrl?: string,
+  algorithms?: Algorithm[], - 'if there is an alt alg to use for token verification - note that HS256 is default'
+  excluded?: string[] - 'paths to exlude in routes'
+```
+
 
 ```
-{ exclude: 'paths to exlude in routes',
-  alg?: 'if there is an alt alg to use - note that RS256 is default',
+{ exclude?: ,
+  alg?: ,
   jwksurl: 'this can be `string|function`,
-  iss? : 'if present also validate',
-  aud? : 'if present also validate'}
+  iss? : ,
+  aud? : }
 
 ```
 
 ### alg
-if `alg` is supplied, this becomes a verification aspect. Jwt tokens supply the `alg` as part of the header, along with the `kid`
+if `algorithms` is supplied, this becomes a verification aspect. Jwt tokens supply the `algorithms` as part of the header, along with the `kid`. We use the `algorithms` supplied to as the constrained set - if the `alg` on JWT token is not in the set it fails validation.
 
 ### jwksurl
 if the `jwksurl` is a string, it is parsed to ensure its valid url. If so, then the `JwksHost` is to be called for the keyset and key for `kid`.

@@ -196,7 +196,7 @@ describe('Mandatory algorithms check in options', () => {
    * here we're saying if you supply the options, then it HAS to have 
    * valid algorithms and be present.
    */
-  describe('Verify token with algorithm-Fail', () => {
+  describe('Verify token with algorithm empty array-Fail', () => {
     const app = express();
     const router = express.Router();
     const secret = 'sharedsecret';
@@ -234,4 +234,43 @@ describe('Mandatory algorithms check in options', () => {
         .expect(401, done);
     });
   });
+
+  describe('Verify token with algorithm NO array-Fail', () => {
+    const app = express();
+    const router = express.Router();
+    const secret = 'sharedsecret';
+    const token = jwt.sign({ foo: 'bar' }, secret);
+    const path = '/';
+    const options = { //}: JwtProxyOptions = {
+      secretOrKey: secret
+    }
+
+    before(function () {
+      // mocker..
+      router.all('*', function (req: Request, res: Response, next: NextFunction) {
+        req.headers.authorization = 'Bearer ' + token;
+        next();
+      });
+      // Norml middleware usage..0
+      router.all('*', jwtProxy(options));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+
+      // this supresses the stack trace - std Express error handler
+      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+        console.error(error.message);
+        res.sendStatus(res.statusCode);
+        next();
+      });
+
+    });
+
+    it('GET should be 401', (done) => {
+      request(app)
+        .get(path)
+        .set('Accept', 'application/json')
+        .expect(401, done);
+    });
+  });
+
 });

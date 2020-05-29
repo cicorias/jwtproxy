@@ -5,17 +5,28 @@ import { NextFunction, Request, Response, RequestHandler } from 'express';
 import jwt, { VerifyOptions, Algorithm } from 'jsonwebtoken';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HttpException, NoJwtException } from './HttpException';
-import { getVerifyOptions } from './JwksHelper';
+import { NoJwtException, InvalidOption, InvalidJwtToken } from './HttpException';
 import indexOf from './indexOf'
-import assert from 'assert';
 
+
+//TODO: use env variables IF options are not provided to the middlware.
 dotenv.config();
 
 const logger = debug('jwtproxy:info')
 const logDebug = debug('jwtproxy:debug')
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
+
+/**
+ * this allows adding to the Express.Request object.
+ */
+declare global {
+  namespace Express {
+      export interface Request {
+          jwtToken: any;
+      }
+  }
+}
 
 function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
   return async function jwtVerifyMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
@@ -27,42 +38,45 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
     logger('verifying a jwt token with options %o' + proxyOptions);
 
     //First check if this path is excluded
-
-    let isExcluded = false;
     if (proxyOptions?.excluded) {
-      isExcluded = indexOf(proxyOptions.excluded, request.originalUrl)
+      const isExcluded = indexOf(proxyOptions.excluded, request.originalUrl)
       if (isExcluded){
         next();
         return;
       }
     }
 
-    const authHeader = request.headers.authorization;//.authorization.get('Authorization');
+    const authHeader = request.headers.authorization;
+
     try {
       if (authHeader === undefined || authHeader === null) {
         logger('authHeader is null or absent - returning 401: %o', authHeader);
-        //response.statusCode = failedCode;
-        //TODO: can we pass this to next() but suppress annoying mocha output of the 
-        //TODO: entire stack trace.
         throw new NoJwtException();
       }
 
       if (!authHeader.startsWith(tokenPrefix)) {
         logger('%s prefix absent - returning 401: %o', tokenPrefix, authHeader);
-        //response.statusCode = failedCode;
         throw new NoJwtException();
       }
 
-      //grap token from the header
+      //grab token from the header
       const token: string = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
 
       //pre-flight decode to get the kid, alg.
-      const preFlightToken = jwt.decode(token, {complete: true});
+      request.jwtToken = jwt.decode(token, {complete: true});;
 
       let alg:Algorithm = 'HS256';
+      let kid: string | undefined;
 
-      if (preFlightToken && typeof preFlightToken == 'object' && preFlightToken['header'] && preFlightToken['header']['alg']) {
-        alg = preFlightToken['header']['alg'];
+      if (request.jwtToken && typeof request.jwtToken == 'object'
+          && request.jwtToken['header']) {
+        if (request.jwtToken['header']['alg']) {
+          alg = request.jwtToken['header']['alg'];
+        }
+
+        if (request.jwtToken['header']['kid']) {
+          kid = request.jwtToken['header']['kid'];
+        }
       }
 
       logDebug(colors.red('preFlightToken %o'), alg);
@@ -80,12 +94,20 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
         if (proxyOptions.issuer){
           verifyOptions.issuer = proxyOptions.issuer;
         }
+
+        if (!proxyOptions.algorithms?.includes(alg)) {
+          logger('No matching alogorithm present - returning 401: %o', alg);
+          throw new InvalidOption();
+        }
       }
 
       const secretOrKey = (proxyOptions?.secretOrKey) ? proxyOptions.secretOrKey: '';
-
-
-      const decodedToken = jwt.verify(token, secretOrKey, verifyOptions);
+      
+      jwt.verify(token, secretOrKey, verifyOptions, (err, decoded) => {
+        if (err) {
+          throw new InvalidJwtToken(err);
+        }
+      });
 
       next();
       return;
@@ -112,53 +134,16 @@ export interface JwtProxyOptions {
   audience?: string,
   issuer?: string,
   jwksUrl?: string,
-  algorithms: Algorithm[],
+  algorithms?: Algorithm[],
   excluded?: string[]
 }
 
-
-/** Options for jsonwebtoken library */
-export interface JwtVerifyOptions {
-  algorithms?: Algorithm[], //'RS256', //default HS256
-  audience?: string,
-  subject?: string,
-  clockTolerance?: number,
-  maxAge?: number,
-  nonce?: string
-}
-
-/** Options for the jwks-rsa library */
-export interface JwksOptions {
-  jwksUri?: string,
-  requestHeaders?: Record<string, undefined>,
-  requestAgentOptions?: Record<string, undefined>,
-  timeout?: number,
-  proxy?: string
-}
-
-
-// import { IncomingHttpHeaders } from 'http';
-// /** this allows adding custom headers 
-//  * Request.Headers comes from root http objedct
-// */
-// declare module 'http' {
-//     interface IncomingHttpHeaders {
-//         Authorization?: string
-//     }
+// /** Options for the jwks-rsa library */
+// export interface JwksOptions {
+//   jwksUri?: string,
+//   requestHeaders?: Record<string, undefined>,
+//   requestAgentOptions?: Record<string, undefined>,
+//   timeout?: number,
+//   proxy?: string
 // }
-
-/**
- * append to the Express Response object
- * new properties.
- */
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare namespace Express {
-  interface JwtVerify {
-    user: string,
-    aud: string
-  }
-  export interface Response {
-    jwtverify: JwtVerify
-  }
-}
 
