@@ -1,6 +1,6 @@
 {
   "name": "jwtproxy",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "simple jwt validation proxy for express",
   "main": "./dist/index.js",
   "scripts": {
