@@ -23,7 +23,8 @@ describe('Using NO Token', () => {
     const path = '/';
 
     const testOptions: JwtProxyOptions = {
-      excluded: [
+      excluded: 
+      [
         '/clear'],
       secretOrKey: publicKey,
       algorithms: ["RS256"]

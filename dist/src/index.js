@@ -10,6 +10,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
 const indexOf_1 = __importDefault(require("./indexOf"));
+const JwksHelper_1 = require("./JwksHelper");
 //TODO: use env variables IF options are not provided to the middlware.
 dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy:info');
@@ -55,14 +56,18 @@ function jwtProxy(proxyOptions) {
                 if (request.jwtToken['header']['alg']) {
                     alg = request.jwtToken['header']['alg'];
                 }
-                if (request.jwtToken['header']['kid']) {
-                    kid = request.jwtToken['header']['kid'];
-                }
+                // if (request.jwtToken['header']['kid']) {
+                //   kid = request.jwtToken['header']['kid'];
+                // }
             }
             logDebug(colors_1.default.red('preFlightToken %o'), alg);
             //setup options
             const verifyOptions = {};
+            let secretOrKey = '';
             if (proxyOptions) {
+                if (proxyOptions.secretOrKey) {
+                    secretOrKey = proxyOptions.secretOrKey;
+                }
                 if (proxyOptions.algorithms) {
                     verifyOptions.algorithms = proxyOptions.algorithms;
                 }
@@ -72,12 +77,21 @@ function jwtProxy(proxyOptions) {
                 if (proxyOptions.issuer) {
                     verifyOptions.issuer = proxyOptions.issuer;
                 }
-                if (!((_a = proxyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
-                    logger('No matching alogorithm present - returning 401: %o', alg);
-                    throw new HttpException_1.InvalidOption();
-                }
             }
-            const secretOrKey = (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.secretOrKey) ? proxyOptions.secretOrKey : '';
+            else {
+                //TODO: deal with multiple algorithms supplied.
+                secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
+                verifyOptions.algorithms = [process.env.JWTP_ALG];
+                verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
+                verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
+            }
+            //TODO: check if it's a url or string...
+            const theKey = JwksHelper_1.getKey(token, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
+            if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
+                logger('No matching alogorithm present - returning 401: %o', alg);
+                throw new HttpException_1.InvalidOption();
+            }
+            //? TODO: check if secretOrKey is empty.
             jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err, decoded) => {
                 if (err) {
                     throw new HttpException_1.InvalidJwtToken(err);
