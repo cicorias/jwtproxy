@@ -1,5 +1,5 @@
 import { VerifyOptions } from "jsonwebtoken";
-import { JwtProxyOptions, fff } from "index";
+import { JwtProxyOptions } from "index";
 import { Algorithm } from 'jsonwebtoken';
 import jwks, { ClientOptions } from 'jwks-rsa';
 
@@ -15,7 +15,7 @@ import jwks, { ClientOptions } from 'jwks-rsa';
 //   aud, iss, 
 // kid comes from the key and needs to be "looked up"
 
-export async function getVerifyOptions( token:fff, options?:JwtProxyOptions) : Promise<VerifyOptions> {
+export async function getVerifyOptions( token:string, options?:JwtProxyOptions) : Promise<VerifyOptions> {
 
   //if options specifies JwksUri - that means we need to retrieve it.
 

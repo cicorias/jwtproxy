@@ -7,10 +7,10 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import colors from 'colors';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-import {genericHandlers} from './handlers2';
+import { genericHandlers } from './handlers2';
 import jwtProxy, { JwtProxyOptions } from '../src/index'
 
-describe.skip('test all http VERBS are intercepted', function () {
+describe('test all http VERBS are intercepted', () => {
   describe('GET / header presence first ', () => {
     const app = express();
     const router = express.Router();
@@ -29,7 +29,7 @@ describe.skip('test all http VERBS are intercepted', function () {
         //next();
       });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      router.all('*', (e:Error,r:Request,res:Response,n:NextFunction) => {
+      router.all('*', (e: Error, r: Request, res: Response, n: NextFunction) => {
         console.error(colors.blue("my error handler"));
       })
     });
@@ -61,7 +61,7 @@ describe.skip('test all http VERBS are intercepted', function () {
   });
 
   /** tests expected to fail due to signature or key differences */
-  describe.skip('different signature', function () {
+  describe('different signature', () => {
     const app = express();
     const router = express.Router();
     const secret = 'nonsharedsecret';
@@ -87,19 +87,19 @@ describe.skip('test all http VERBS are intercepted', function () {
 
     });
 
-    it('GET should be 401', function (done) {
+    it('GET should be 401', (done) => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
         .expect(401, done);
     });
-    it('PUT should be 401', function (done) {
+    it('PUT should be 401', (done) => {
       request(app)
         .put(path)
         .set('Accept', 'application/json')
         .expect(401, done);
     });
-    it('POST should be 401', function (done) {
+    it('POST should be 401', (done) => {
       request(app)
         .post(path)
         .set('Accept', 'application/json')
@@ -109,13 +109,13 @@ describe.skip('test all http VERBS are intercepted', function () {
 
 
   /** test that pass  */
-  describe('same signature', function () {
+  describe('same signature', () => {
     const app = express();
     const router = express.Router();
     const secret = 'sharedsecret';
     const token = jwt.sign({ foo: 'bar' }, secret);
     const path = '/';
-    const options:JwtProxyOptions = {
+    const options: JwtProxyOptions = {
       secretOrKey: secret,
       algorithms: ['HS256']
     }
@@ -140,7 +140,7 @@ describe.skip('test all http VERBS are intercepted', function () {
 
     });
 
-    it('GET should be 200', function (done) {
+    it('GET should be 200', (done) => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
@@ -149,4 +149,89 @@ describe.skip('test all http VERBS are intercepted', function () {
   });
 });
 
+describe('Mandatory algorithms check in options', () => {
+  describe('Verify token with algorithm-Pass', () => {
+    const app = express();
+    const router = express.Router();
+    const secret = 'sharedsecret';
+    const token = jwt.sign({ foo: 'bar' }, secret);
+    const path = '/';
+    const options: JwtProxyOptions = {
+      secretOrKey: secret,
+      algorithms: ['HS256']
+    }
 
+    before(function () {
+      // mocker..
+      router.all('*', function (req: Request, res: Response, next: NextFunction) {
+        req.headers.authorization = 'Bearer ' + token;
+        next();
+      });
+      // Norml middleware usage..0
+      router.all('*', jwtProxy(options));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+
+      // this supresses the stack trace - std Express error handler
+      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+        console.error(error.message);
+        res.sendStatus(res.statusCode);
+        next();
+      });
+
+    });
+
+    it('GET should be 200', (done) => {
+      request(app)
+        .get(path)
+        .set('Accept', 'application/json')
+        .expect(200, done);
+    });
+
+
+
+  });
+
+  /** 
+   * here we're saying if you supply the options, then it HAS to have 
+   * valid algorithms and be present.
+   */
+  describe('Verify token with algorithm-Fail', () => {
+    const app = express();
+    const router = express.Router();
+    const secret = 'sharedsecret';
+    const token = jwt.sign({ foo: 'bar' }, secret);
+    const path = '/';
+    const options: JwtProxyOptions = {
+      secretOrKey: secret,
+      algorithms: []
+    }
+
+    before(function () {
+      // mocker..
+      router.all('*', function (req: Request, res: Response, next: NextFunction) {
+        req.headers.authorization = 'Bearer ' + token;
+        next();
+      });
+      // Norml middleware usage..0
+      router.all('*', jwtProxy(options));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+
+      // this supresses the stack trace - std Express error handler
+      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+        console.error(error.message);
+        res.sendStatus(res.statusCode);
+        next();
+      });
+
+    });
+
+    it('GET should be 401', (done) => {
+      request(app)
+        .get(path)
+        .set('Accept', 'application/json')
+        .expect(401, done);
+    });
+  });
+});

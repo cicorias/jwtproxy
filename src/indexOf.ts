@@ -20,31 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.} source 
  */
 
-// if (!String.prototype.startsWith) {
-//   String.prototype.startsWith = function (searchString, position) {
-//     return this.substr(position || 0, searchString.length) === searchString;
-//   };
-// }
-
 /**
  * Simple compare.
  * @module indexOf
  */
+
+
 function compareIt(source:string, target:string) {
   return target.startsWith(source);
-  //return source === target;
 }
-
-
 
 /**
  * Does an indexOf from a array/object against a target and optional key
- * @param {Object} subject - the source array or object.
+ * @param {string[]} subject - the source array or object.
  * @param {string} target - the value to lookup.
- * @param {string} key - an optional property value to use if using an object as subject
- * @returns {Number} the index value where found or -1 if not found
+ * @returns {boolean} the index value where found or -1 if not found
  */
-export default function fastIndexOf(subject: string[], target: string) { //}, key: string) {
+export default function fastIndexOf(subject: string[], target: string): boolean {
   var length = subject.length;
   var i = 0;
 
