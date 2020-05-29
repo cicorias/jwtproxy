@@ -7,6 +7,8 @@ import jwt, { VerifyOptions, Algorithm } from 'jsonwebtoken';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HttpException, NoJwtException } from './HttpException';
 import { getVerifyOptions } from './JwksHelper';
+import indexOf from './indexOf'
+import assert from 'assert';
 
 dotenv.config();
 
@@ -23,6 +25,17 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
      * desire to NOT have the stack trace emitted.
     */
     logger('verifying a jwt token with options %o' + proxyOptions);
+
+    //First check if this path is excluded
+
+    let isExcluded = false;
+    if (proxyOptions?.excluded) {
+      isExcluded = indexOf(proxyOptions.excluded, request.originalUrl)
+      if (isExcluded)
+        next();
+        return;
+    }
+
     const authHeader = request.headers.authorization;//.authorization.get('Authorization');
     try {
       if (authHeader === undefined || authHeader === null) {
@@ -53,11 +66,6 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
       logDebug(colors.red('preFlightToken %o'), alg);
 
-
-      //TODO: need a factory...
-      //const verifyOption = await getVerifyOptions(options);
-
-
       //setup options
       const verifyOptions: VerifyOptions = {};
 
@@ -82,7 +90,6 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
     }
     catch (error) {
-      logger(colors.red('failed jwt validation %o'), error.message);
       response.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Expires': '-1',
@@ -90,6 +97,8 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1',
       }).status(failedCode).send();
+
+      logger(colors.red('failed jwt validation %o'), error.message);
     }
   }
 }
