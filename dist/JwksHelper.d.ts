@@ -1,3 +1,1 @@
-import { VerifyOptions } from "jsonwebtoken";
-import { JwtProxyOptions, fff } from "index";
-export declare function getVerifyOptions(token: fff, options?: JwtProxyOptions): Promise<VerifyOptions>;
+export declare function getKey(jwtToken: string, jwksUrl: string): Promise<string>;
