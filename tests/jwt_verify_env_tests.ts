@@ -40,6 +40,23 @@ describe('Using Environment using secret as string.', () => {
         .set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
+
+    //added to following to see what "cold" vs "warm" test time is.
+    it('GET / should return 200a', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+    it('GET / should return 200b', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+    it('GET / should return 200c', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
   });
 
 

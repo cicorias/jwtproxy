@@ -24,12 +24,6 @@ SOFTWARE.} source
  * Simple compare.
  * @module indexOf
  */
-
-
-function compareIt(source:string, target:string) {
-  return target.startsWith(source);
-}
-
 /**
  * Does an indexOf from a array/object against a target and optional key
  * @param {string[]} subject - the source array or object.
@@ -37,14 +31,11 @@ function compareIt(source:string, target:string) {
  * @returns {boolean} the index value where found or -1 if not found
  */
 export default function fastIndexOf(subject: string[], target: string): boolean {
-  var length = subject.length;
-  var i = 0;
 
-    for (; i < length; i++) {
-      if (compareIt(subject[i], target)) {
-        return true;
-      }
+  for (let i = 0; i < subject.length; i++) {
+    if (target.startsWith(subject[i])) {
+      return true;
     }
+  }
   return false;
-};
-
+}

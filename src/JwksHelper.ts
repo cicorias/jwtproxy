@@ -34,8 +34,7 @@ export async function getKey(jwtToken: string, jwksUrl: string): Promise<string>
   }).catch((err) => {
     logger(err);
   })
-
-  //TODO: figure out how this story ends...
+  
   return publicKey as string;
 }
 
