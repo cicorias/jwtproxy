@@ -18,10 +18,13 @@
   "files": [
     "src/",
     "dist/",
+    "docs/",
     "tests/",
+    "eslintrc.json",
     ".gitignore",
     "CODE_OF_CONDUCT.md",
     "LICENSE",
+    "nodemon.json",
     "package-lock.json",
     "package.json",
     "README.md",
