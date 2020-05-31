@@ -2,9 +2,9 @@ export class HttpException extends Error {
   public status: number;
   public message: string;
   constructor(status: number, message: string, baseError?: Error) {
-    super(message);
+    super(message + baseError?.message);
     this.status = status;
-    this.message = message;
+    this.message = message + baseError?.message;
   }
 }
 
@@ -25,3 +25,10 @@ export class InvalidJwtToken extends HttpException {
     super(401, 'Invalid Jwt Token ' + err.message, err);
   }
 }
+
+export class InvalidJwksUrl extends HttpException {
+  constructor(msg?: string) {
+    super(401, 'Invalid JwksUrl ' + msg);
+  }
+}
+

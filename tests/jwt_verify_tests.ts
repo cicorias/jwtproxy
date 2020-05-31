@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-undef */
 import { expect } from 'chai';
 // import assert from 'assert';
@@ -24,13 +25,13 @@ describe('test all http VERBS are intercepted', () => {
       // this supresses the stack trace - std Express error handler
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(colors.green("my error handler"));
+        console.error(colors.red("my error handler"));
         res.sendStatus(res.statusCode);
         //next();
       });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       router.all('*', (e: Error, r: Request, res: Response, n: NextFunction) => {
-        console.error(colors.blue("my error handler"));
+        console.error(colors.red("my error handler"));
       })
     });
 
@@ -87,23 +88,23 @@ describe('test all http VERBS are intercepted', () => {
 
     });
 
-    it('GET should be 401', (done) => {
+    it('GET should be 401', () => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
-        .expect(401, done);
+        .expect(401);
     });
-    it('PUT should be 401', (done) => {
+    it('PUT should be 401', () => {
       request(app)
         .put(path)
         .set('Accept', 'application/json')
-        .expect(401, done);
+        .expect(401);
     });
-    it('POST should be 401', (done) => {
+    it('POST should be 401', () => {
       request(app)
         .post(path)
         .set('Accept', 'application/json')
-        .expect(401, done);
+        .expect(401);
     });
   });
 

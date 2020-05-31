@@ -12,3 +12,6 @@ export declare class InvalidOption extends HttpException {
 export declare class InvalidJwtToken extends HttpException {
     constructor(err: Error);
 }
+export declare class InvalidJwksUrl extends HttpException {
+    constructor(msg?: string);
+}

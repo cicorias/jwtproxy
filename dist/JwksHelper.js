@@ -3,19 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getKey = void 0;
+exports.checkUrl = exports.getKey = void 0;
 const jwks_rsa_1 = __importDefault(require("jwks-rsa"));
+const HttpException_1 = require("./HttpException");
 const util_1 = __importDefault(require("util"));
-// need "allowed algorithms"
-//https://github.com/auth0/node-jwks-rsa/blob/26e2fa3bd670707cba3585dfa2238bf8fd81c175/examples/express-demo/server.js
-// really need to just shim this: https://github.com/auth0/node-jwks-rsa/blob/26e2fa3bd670707cba3585dfa2238bf8fd81c175/examples/express-demo/server.js#L12
-//we onlyh do RS256
-//a secret is supplied via options OR not; if NOT, then jwksuri is needed (options / env)
-//extra validation fields are supplied as 'key:string, value:string' 
-//   xtra val comes object OR via env.   if in env, they must be formatted '{k:v,k:v}' --- essentially needs to be a valid flat json object with the curly braces.??
-//   aud, iss, 
-// kid comes from the key and needs to be "looked up"
+const debug_1 = __importDefault(require("debug"));
+const logger = debug_1.default('jwtproxy');
+const logDebug = debug_1.default('jwtproxy:debug');
 async function getKey(jwtToken, jwksUrl) {
+    if (!checkUrl(jwksUrl)) {
+        throw new HttpException_1.InvalidJwksUrl(jwksUrl);
+    }
     const clientOptions = {
         cache: true,
         jwksUri: jwksUrl
@@ -28,15 +26,20 @@ async function getKey(jwtToken, jwksUrl) {
         }
     }
     const client = jwks_rsa_1.default(clientOptions);
-    const z = util_1.default.promisify(client.getSigningKey);
-    const rv = await z(kid).then((d) => {
-        console.log(d);
-        return d.getPublicKey();
+    const getSigningKeyAsync = util_1.default.promisify(client.getSigningKey);
+    const publicKey = await getSigningKeyAsync(kid).then((result) => {
+        logDebug(result);
+        return result.getPublicKey();
     }).catch((err) => {
-        console.error(err);
+        logger(err);
     });
     //TODO: figure out how this story ends...
-    return '';
+    return publicKey;
 }
 exports.getKey = getKey;
+function checkUrl(url) {
+    const regex = /^https?:\/\//;
+    return regex.test(url);
+}
+exports.checkUrl = checkUrl;
 //# sourceMappingURL=JwksHelper.js.map

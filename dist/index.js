@@ -13,7 +13,7 @@ const indexOf_1 = __importDefault(require("./indexOf"));
 const JwksHelper_1 = require("./JwksHelper");
 //TODO: use env variables IF options are not provided to the middlware.
 dotenv_1.default.config();
-const logger = debug_1.default('jwtproxy:info');
+const logger = debug_1.default('jwtproxy');
 const logDebug = debug_1.default('jwtproxy:debug');
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
@@ -48,17 +48,12 @@ function jwtProxy(proxyOptions) {
             const token = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
             //pre-flight decode to get the kid, alg.
             request.jwtToken = jsonwebtoken_1.default.decode(token, { complete: true });
-            ;
             let alg = 'HS256';
-            let kid;
             if (request.jwtToken && typeof request.jwtToken == 'object'
                 && request.jwtToken['header']) {
                 if (request.jwtToken['header']['alg']) {
                     alg = request.jwtToken['header']['alg'];
                 }
-                // if (request.jwtToken['header']['kid']) {
-                //   kid = request.jwtToken['header']['kid'];
-                // }
             }
             logDebug(colors_1.default.red('preFlightToken %o'), alg);
             //setup options
@@ -77,26 +72,41 @@ function jwtProxy(proxyOptions) {
                 if (proxyOptions.issuer) {
                     verifyOptions.issuer = proxyOptions.issuer;
                 }
+                if (proxyOptions.jwksUrl) {
+                    if (JwksHelper_1.checkUrl(proxyOptions.jwksUrl)) {
+                        secretOrKey = await JwksHelper_1.getKey(request.jwtToken, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
+                    }
+                }
             }
             else {
+                if (process.env.JWTP_URL) {
+                    if (JwksHelper_1.checkUrl(process.env.JWTP_URl)) {
+                        secretOrKey = await JwksHelper_1.getKey(request.jwtToken, process.env.JWTP_URL);
+                    }
+                    else {
+                        secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
+                    }
+                }
                 //TODO: deal with multiple algorithms supplied.
-                secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
                 verifyOptions.algorithms = [process.env.JWTP_ALG];
                 verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
                 verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
             }
-            //TODO: check if it's a url or string...
-            const theKey = JwksHelper_1.getKey(request.jwtToken, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
             if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
                 logger('No matching alogorithm present - returning 401: %o', alg);
-                throw new HttpException_1.InvalidOption();
+                throw new HttpException_1.InvalidOption('No matching alogorithm present');
             }
             //? TODO: check if secretOrKey is empty.
-            jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err, decoded) => {
-                if (err) {
-                    throw new HttpException_1.InvalidJwtToken(err);
-                }
-            });
+            if (secretOrKey.length > 0) {
+                jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err) => {
+                    if (err) {
+                        throw new HttpException_1.InvalidJwtToken(err);
+                    }
+                });
+            }
+            else {
+                throw new HttpException_1.InvalidJwtToken(Error("Empty secret or key"));
+            }
             next();
             return;
         }
@@ -113,12 +123,4 @@ function jwtProxy(proxyOptions) {
     };
 }
 exports.default = jwtProxy;
-// /** Options for the jwks-rsa library */
-// export interface JwksOptions {
-//   jwksUri?: string,
-//   requestHeaders?: Record<string, undefined>,
-//   requestAgentOptions?: Record<string, undefined>,
-//   timeout?: number,
-//   proxy?: string
-// }
 //# sourceMappingURL=index.js.map
