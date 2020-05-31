@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import jwtProxy, { JwtProxyOptions } from './index'
+import jwtProxy, { JwtProxyOptions } from '../dist/index'
 
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
 
