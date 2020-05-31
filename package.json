@@ -8,7 +8,7 @@
     "clean": "npx rimraf ./dist",
     "dev:static": "ts-node ./src/server.ts",
     "dev": "nodemon",
-    "test": "mocha -r ts-node/register -r mocha-clean tests/**/*.ts",
+    "test": "mocha -r ts-node/register -r mocha-clean tests/**/*.ts --exit",
     "test:setup": "mocha -r ts-node/register -r mocha-clean tests/**/jwt_setup_tests.ts",
     "test:watch": "watch  -c npm run test -- --reporter min",
     "preversion": "npm test",
