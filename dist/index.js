@@ -3,15 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv_1 = __importDefault(require("dotenv"));
-const debug_1 = __importDefault(require("debug"));
 const colors_1 = __importDefault(require("colors"));
+const debug_1 = __importDefault(require("debug"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
 const indexOf_1 = __importDefault(require("./indexOf"));
 const JwksHelper_1 = require("./JwksHelper");
-//TODO: use env variables IF options are not provided to the middlware.
 dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy');
 const logDebug = debug_1.default('jwtproxy:debug');
@@ -20,20 +19,15 @@ const failedCode = 401;
 function jwtProxy(proxyOptions) {
     return async function jwtVerifyMiddleware(request, response, next) {
         var _a;
-        /** note that we provide the error to the next() function to allow
-         * default express or the defined error handler to handle the error. for express
-         * you must override the handler or provide env variable NODE_ENV=production if you
-         * desire to NOT have the stack trace emitted.
-        */
         logger('verifying a jwt token with options %o' + proxyOptions);
-        //First check if this path is excluded
+        //First check if this path is excluded and bail if true
         if (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.excluded) {
-            const isExcluded = indexOf_1.default(proxyOptions.excluded, request.originalUrl);
-            if (isExcluded) {
+            if (indexOf_1.default(proxyOptions.excluded, request.originalUrl)) {
                 next();
                 return;
             }
         }
+        //grab the header if it is there.
         const authHeader = request.headers.authorization;
         try {
             if (authHeader === undefined || authHeader === null) {
@@ -96,7 +90,6 @@ function jwtProxy(proxyOptions) {
                 logger('No matching alogorithm present - returning 401: %o', alg);
                 throw new HttpException_1.InvalidOption('No matching alogorithm present');
             }
-            //? TODO: check if secretOrKey is empty.
             if (secretOrKey.length > 0) {
                 jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err) => {
                     if (err) {
@@ -107,6 +100,7 @@ function jwtProxy(proxyOptions) {
             else {
                 throw new HttpException_1.InvalidJwtToken(Error("Empty secret or key"));
             }
+            //made it this far so onwards.
             next();
             return;
         }

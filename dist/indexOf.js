@@ -25,9 +25,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Simple compare.
  * @module indexOf
  */
-function compareIt(source, target) {
-    return target.startsWith(source);
-}
 /**
  * Does an indexOf from a array/object against a target and optional key
  * @param {string[]} subject - the source array or object.
@@ -35,15 +32,12 @@ function compareIt(source, target) {
  * @returns {boolean} the index value where found or -1 if not found
  */
 function fastIndexOf(subject, target) {
-    var length = subject.length;
-    var i = 0;
-    for (; i < length; i++) {
-        if (compareIt(subject[i], target)) {
+    for (let i = 0; i < subject.length; i++) {
+        if (target.startsWith(subject[i])) {
             return true;
         }
     }
     return false;
 }
 exports.default = fastIndexOf;
-;
 //# sourceMappingURL=indexOf.js.map

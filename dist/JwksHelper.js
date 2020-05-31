@@ -33,7 +33,6 @@ async function getKey(jwtToken, jwksUrl) {
     }).catch((err) => {
         logger(err);
     });
-    //TODO: figure out how this story ends...
     return publicKey;
 }
 exports.getKey = getKey;

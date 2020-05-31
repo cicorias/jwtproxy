@@ -20,6 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.} source
  */
 /**
+ * Simple compare.
+ * @module indexOf
+ */
+/**
  * Does an indexOf from a array/object against a target and optional key
  * @param {string[]} subject - the source array or object.
  * @param {string} target - the value to lookup.
