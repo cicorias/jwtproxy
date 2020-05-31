@@ -9,47 +9,60 @@ const colors_1 = __importDefault(require("colors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
+const indexOf_1 = __importDefault(require("./indexOf"));
+const JwksHelper_1 = require("./JwksHelper");
+//TODO: use env variables IF options are not provided to the middlware.
 dotenv_1.default.config();
-const logger = debug_1.default('jwtproxy:info');
+const logger = debug_1.default('jwtproxy');
 const logDebug = debug_1.default('jwtproxy:debug');
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
 function jwtProxy(proxyOptions) {
     return async function jwtVerifyMiddleware(request, response, next) {
+        var _a;
         /** note that we provide the error to the next() function to allow
          * default express or the defined error handler to handle the error. for express
          * you must override the handler or provide env variable NODE_ENV=production if you
          * desire to NOT have the stack trace emitted.
         */
         logger('verifying a jwt token with options %o' + proxyOptions);
-        const authHeader = request.headers.authorization; //.authorization.get('Authorization');
+        //First check if this path is excluded
+        if (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.excluded) {
+            const isExcluded = indexOf_1.default(proxyOptions.excluded, request.originalUrl);
+            if (isExcluded) {
+                next();
+                return;
+            }
+        }
+        const authHeader = request.headers.authorization;
         try {
             if (authHeader === undefined || authHeader === null) {
                 logger('authHeader is null or absent - returning 401: %o', authHeader);
-                //response.statusCode = failedCode;
-                //TODO: can we pass this to next() but suppress annoying mocha output of the 
-                //TODO: entire stack trace.
                 throw new HttpException_1.NoJwtException();
             }
             if (!authHeader.startsWith(tokenPrefix)) {
                 logger('%s prefix absent - returning 401: %o', tokenPrefix, authHeader);
-                //response.statusCode = failedCode;
                 throw new HttpException_1.NoJwtException();
             }
-            //grap token from the header
+            //grab token from the header
             const token = (authHeader) ? authHeader.substring(tokenPrefix.length, authHeader.length) : '';
             //pre-flight decode to get the kid, alg.
-            const preFlightToken = jsonwebtoken_1.default.decode(token, { complete: true });
+            request.jwtToken = jsonwebtoken_1.default.decode(token, { complete: true });
             let alg = 'HS256';
-            if (preFlightToken && typeof preFlightToken == 'object' && preFlightToken['header'] && preFlightToken['header']['alg']) {
-                alg = preFlightToken['header']['alg'];
+            if (request.jwtToken && typeof request.jwtToken == 'object'
+                && request.jwtToken['header']) {
+                if (request.jwtToken['header']['alg']) {
+                    alg = request.jwtToken['header']['alg'];
+                }
             }
             logDebug(colors_1.default.red('preFlightToken %o'), alg);
-            //TODO: need a factory...
-            //const verifyOption = await getVerifyOptions(options);
             //setup options
             const verifyOptions = {};
+            let secretOrKey = '';
             if (proxyOptions) {
+                if (proxyOptions.secretOrKey) {
+                    secretOrKey = proxyOptions.secretOrKey;
+                }
                 if (proxyOptions.algorithms) {
                     verifyOptions.algorithms = proxyOptions.algorithms;
                 }
@@ -59,12 +72,43 @@ function jwtProxy(proxyOptions) {
                 if (proxyOptions.issuer) {
                     verifyOptions.issuer = proxyOptions.issuer;
                 }
+                if (proxyOptions.jwksUrl) {
+                    if (JwksHelper_1.checkUrl(proxyOptions.jwksUrl)) {
+                        secretOrKey = await JwksHelper_1.getKey(request.jwtToken, proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.jwksUrl);
+                    }
+                }
             }
-            const secretOrKey = (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.secretOrKey) ? proxyOptions.secretOrKey : '';
-            console.error('before');
-            const decodedToken = jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions);
-            console.error('fater');
+            else {
+                if (process.env.JWTP_URL) {
+                    if (JwksHelper_1.checkUrl(process.env.JWTP_URl)) {
+                        secretOrKey = await JwksHelper_1.getKey(request.jwtToken, process.env.JWTP_URL);
+                    }
+                    else {
+                        secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
+                    }
+                }
+                //TODO: deal with multiple algorithms supplied.
+                verifyOptions.algorithms = [process.env.JWTP_ALG];
+                verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
+                verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
+            }
+            if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
+                logger('No matching alogorithm present - returning 401: %o', alg);
+                throw new HttpException_1.InvalidOption('No matching alogorithm present');
+            }
+            //? TODO: check if secretOrKey is empty.
+            if (secretOrKey.length > 0) {
+                jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err) => {
+                    if (err) {
+                        throw new HttpException_1.InvalidJwtToken(err);
+                    }
+                });
+            }
+            else {
+                throw new HttpException_1.InvalidJwtToken(Error("Empty secret or key"));
+            }
             next();
+            return;
         }
         catch (error) {
             logger(colors_1.default.red('failed jwt validation %o'), error.message);

@@ -23,7 +23,8 @@
     "rules": {
         "indent": ["error", 2],
         "semi":"off",
-        "no-mixed-spaces-and-tabs": "error"
+        "no-mixed-spaces-and-tabs": "error",
+        "no-console" : "error"
     },
     "ignorePatterns": [
         "**/dist/**/*.js"

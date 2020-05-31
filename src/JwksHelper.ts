@@ -1,47 +1,45 @@
-import { VerifyOptions } from "jsonwebtoken";
-import { JwtProxyOptions } from "index";
-import { Algorithm } from 'jsonwebtoken';
-import jwks, { ClientOptions, JwksClient } from 'jwks-rsa';
+import jwks, { ClientOptions } from 'jwks-rsa';
+import { InvalidJwksUrl } from './HttpException';
 import util from 'util';
 
-// need "allowed algorithms"
-//https://github.com/auth0/node-jwks-rsa/blob/26e2fa3bd670707cba3585dfa2238bf8fd81c175/examples/express-demo/server.js
+import debug from 'debug';
+const logger = debug('jwtproxy')
+const logDebug = debug('jwtproxy:debug')
 
-// really need to just shim this: https://github.com/auth0/node-jwks-rsa/blob/26e2fa3bd670707cba3585dfa2238bf8fd81c175/examples/express-demo/server.js#L12
+export async function getKey(jwtToken: string, jwksUrl: string): Promise<string> {
 
-//we onlyh do RS256
-//a secret is supplied via options OR not; if NOT, then jwksuri is needed (options / env)
-//extra validation fields are supplied as 'key:string, value:string' 
-//   xtra val comes object OR via env.   if in env, they must be formatted '{k:v,k:v}' --- essentially needs to be a valid flat json object with the curly braces.??
-//   aud, iss, 
-// kid comes from the key and needs to be "looked up"
+  if (!checkUrl(jwksUrl)) {
+    throw new InvalidJwksUrl(jwksUrl);
+  }
 
-export async function getKey(jwtToken: string, jwksUrl: string) : Promise<string> {
-    const clientOptions: ClientOptions = {
-        cache: true,
-        jwksUri: jwksUrl
+  const clientOptions: ClientOptions = {
+    cache: true,
+    jwksUri: jwksUrl
+  }
+
+  let kid = '';
+  if (jwtToken && typeof jwtToken == 'object'
+    && jwtToken['header']) {
+    if (jwtToken['header']['kid']) {
+      kid = jwtToken['header']['kid'];
     }
+  }
 
-    let kid = '';
-    if (jwtToken && typeof jwtToken == 'object'
-        && jwtToken['header']) {
-        if (jwtToken['header']['kid']) {
-            kid = jwtToken['header']['kid'];
-        }
-    }
+  const client = jwks(clientOptions);
+  const getSigningKeyAsync = util.promisify(client.getSigningKey);
 
-    const client = jwks(clientOptions);
+  const publicKey = await getSigningKeyAsync(kid).then((result) => {
+    logDebug(result);
+    return result.getPublicKey();
+  }).catch((err) => {
+    logger(err);
+  })
 
-    const z = util.promisify(client.getSigningKey);
-
-    const rv = await z(kid).then( (d) => {
-        console.log(d);
-        return d.getPublicKey();
-    }).catch(  (err) =>{
-        console.error(err);
-    })
-
-    //TODO: figure out how this story ends...
-    return '';
+  //TODO: figure out how this story ends...
+  return publicKey as string;
 }
 
+export function checkUrl(url:string): boolean {
+  const regex = /^https?:\/\//
+  return regex.test(url);
+}
