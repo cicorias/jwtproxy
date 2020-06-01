@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Request, Response, Router, NextFunction } from 'express';
@@ -44,4 +45,4 @@ export function genericHandlers(router: Router, path: string) {
   router.options(path, options);
   router.delete(path, del);
   return router;
-};
+}

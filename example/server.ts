@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import dotenv from 'dotenv';
 import jwtProxy, { JwtProxyOptions } from '../dist/index'
 
@@ -98,10 +99,10 @@ const appWrapper = new App({
     new StatusController()
   ],
   middleWares: [
-    // bodyParser.json(),
-    jwtProxy(options), //jwtVerifyMiddleware,
-    // bodyParser.urlencoded({ extended: true }),
+    jwtProxy(options),
     loggerMiddleware
+    // bodyParser.json(),
+    // bodyParser.urlencoded({ extended: true })
   ]
 })
 
