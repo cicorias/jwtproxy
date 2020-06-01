@@ -1,3 +1,7 @@
+
+![jwtproxy CI](https://github.com/cicorias/jwtproxy/workflows/Node.js%20CI/badge.svg)
+![jwtproxy npmjs publish](https://github.com/cicorias/jwtproxy/workflows/Node.js%20Package%20NPMJS%20registry/badge.svg)
+
 # jwtproxy
 > NOTE: this is a work in progress and early release.
 
