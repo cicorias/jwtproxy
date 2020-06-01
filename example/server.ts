@@ -1,10 +1,15 @@
 /* eslint-disable no-console */
 import dotenv from 'dotenv';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express';
+import bodyParser from 'body-parser';
 import jwtProxy, { JwtProxyOptions } from '../dist/index'
+
+
+
 
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
 
-import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express';
 
 dotenv.config();
 
@@ -15,6 +20,9 @@ const loggerMiddleware = (req: Request, resp: Response, next: NextFunction) => {
   next();
 }
 
+const sharedSecret = "notasecret";
+
+/** this route is to be protected */
 class UserController {
   private sampleUsers:string[] = ['john', 'paul', 'ringo'];
   public router = express.Router();
@@ -28,6 +36,7 @@ class UserController {
   };
 }
 
+/** this route is OPEN  */
 class StatusController {
   private status = 'all OK';
   public router = express.Router();
@@ -38,6 +47,27 @@ class StatusController {
 
   getStatus = (request: express.Request, response: express.Response) => {
     return response.send(this.status);
+  };
+}
+
+/** this route provides token signing for testing only. */
+class SignController {
+  private status = 'use POST with a json jwt payload';
+  public router = express.Router();
+
+  constructor() {
+    this.router.get('/sign', this.getSign);
+    this.router.post('/sign', this.sign);
+  }
+
+  getSign = (request: express.Request, response: express.Response) => {
+    return response.send(this.status);
+  };
+
+  sign = (request: express.Request, response: express.Response) => {
+    const options: SignOptions = { algorithm: 'HS256'}
+    const rv = jwt.sign(request.body, sharedSecret, options)
+    return response.send(rv);
   };
 
 }
@@ -89,19 +119,22 @@ class App {
 }
 
 const options: JwtProxyOptions = {
-  algorithms: ['RS256', 'HS256']
+  algorithms: ['HS256'],
+  excluded: ['/status', '/sign'],
+  secretOrKey: sharedSecret
 }
 
 const appWrapper = new App({
   port: (!process.env.PORT) ? 5000 : parseInt(process.env.PORT),
   controllers: [
     new UserController(),
-    new StatusController()
+    new StatusController(),
+    new SignController()
   ],
   middleWares: [
     jwtProxy(options),
-    loggerMiddleware
-    // bodyParser.json(),
+    loggerMiddleware,
+    bodyParser.json(),
     // bodyParser.urlencoded({ extended: true })
   ]
 })

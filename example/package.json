@@ -6,13 +6,14 @@
   "dependencies": {
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.3",
+    "body-parser": "^1.19.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build" : "npx tsc --build ."
+    "build": "npx tsc --build ."
   },
   "keywords": [],
   "author": "Shawn Cicoria <github@cicoria.com> (https://cicoria.com)",

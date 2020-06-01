@@ -3,16 +3,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-console */
 var dotenv_1 = __importDefault(require("dotenv"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+var express_1 = __importDefault(require("express"));
+var body_parser_1 = __importDefault(require("body-parser"));
 var index_1 = __importDefault(require("../dist/index"));
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
-var express_1 = __importDefault(require("express"));
 dotenv_1.default.config();
 // https://dev.to/aligoren/developing-an-express-application-using-typescript-3b1
 var loggerMiddleware = function (req, resp, next) {
     console.log('Request logged:', req.method, req.path);
     next();
 };
+var sharedSecret = "notasecret";
+/** this route is to be protected */
 var UserController = /** @class */ (function () {
     function UserController() {
         var _this = this;
@@ -25,6 +30,7 @@ var UserController = /** @class */ (function () {
     }
     return UserController;
 }());
+/** this route is OPEN  */
 var StatusController = /** @class */ (function () {
     function StatusController() {
         var _this = this;
@@ -36,6 +42,25 @@ var StatusController = /** @class */ (function () {
         this.router.get('/status', this.getStatus);
     }
     return StatusController;
+}());
+/** this route provides token signing for testing only. */
+var SignController = /** @class */ (function () {
+    function SignController() {
+        var _this = this;
+        this.status = 'use POST with a json jwt payload';
+        this.router = express_1.default.Router();
+        this.getSign = function (request, response) {
+            return response.send(_this.status);
+        };
+        this.sign = function (request, response) {
+            var options = { algorithm: 'HS256' };
+            var rv = jsonwebtoken_1.default.sign(request.body, sharedSecret, options);
+            return response.send(rv);
+        };
+        this.router.get('/sign', this.getSign);
+        this.router.post('/sign', this.sign);
+    }
+    return SignController;
 }());
 var App = /** @class */ (function () {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,19 +103,21 @@ var App = /** @class */ (function () {
     return App;
 }());
 var options = {
-    algorithms: ['RS256', 'HS256']
+    algorithms: ['HS256'],
+    excluded: ['/status', '/sign'],
+    secretOrKey: sharedSecret
 };
 var appWrapper = new App({
     port: (!process.env.PORT) ? 5000 : parseInt(process.env.PORT),
     controllers: [
         new UserController(),
-        new StatusController()
+        new StatusController(),
+        new SignController()
     ],
     middleWares: [
-        // bodyParser.json(),
         index_1.default(options),
-        // bodyParser.urlencoded({ extended: true }),
-        loggerMiddleware
+        loggerMiddleware,
+        body_parser_1.default.json(),
     ]
 });
 //test if running in mocha
