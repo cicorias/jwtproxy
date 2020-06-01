@@ -20,11 +20,26 @@ function jwtProxy(proxyOptions) {
     return async function jwtVerifyMiddleware(request, response, next) {
         var _a;
         logger('verifying a jwt token with options %o' + proxyOptions);
+        //this first block is a short circuit on ecluced paths.
+        //need tests: 1) proxy and ENV are set, both with excluded - only options is used. warn on ENV settings ignored
         //First check if this path is excluded and bail if true
-        if (proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.excluded) {
-            if (indexOf_1.default(proxyOptions.excluded, request.originalUrl)) {
-                next();
-                return;
+        if (proxyOptions) {
+            if (proxyOptions.excluded) {
+                if (indexOf_1.default(proxyOptions.excluded, request.originalUrl)) {
+                    next();
+                    return;
+                }
+            }
+        }
+        else { //options are not provided so 
+            //grab from env if exists; split and loop on ',' separators
+            const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWPT_EXCLUDE : undefined;
+            if (envExcludes != undefined) {
+                const excludes = envExcludes.split(',');
+                if (indexOf_1.default(excludes, request.originalUrl)) {
+                    next();
+                    return;
+                }
             }
         }
         //grab the header if it is there.
@@ -53,6 +68,7 @@ function jwtProxy(proxyOptions) {
             //setup options
             const verifyOptions = {};
             let secretOrKey = '';
+            //while we checked this above, we have more complex checks here.
             if (proxyOptions) {
                 if (proxyOptions.secretOrKey) {
                     secretOrKey = proxyOptions.secretOrKey;
