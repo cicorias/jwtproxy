@@ -1,26 +1,32 @@
 /* eslint-disable no-undef */
 import { expect } from 'chai';
+import express from 'express';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 // import assert from 'assert';
 import 'mocha';
-import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import colors from 'colors';
+import jwtProxy, { JwtProxyOptions } from '../src/index';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { genericHandlers } from './handlers2';
-import jwtProxy, { JwtProxyOptions } from '../src/index'
 
 const privateKey = fs.readFileSync(__dirname + '/private.pem', 'utf-8');
 const publicKey = fs.readFileSync(__dirname + '/public.pem', 'utf-8');
 
 
-describe.skip('Using jwks url endpoint', () => {
+describe('Using jwks url endpoint', () => {
   const app = express();
   const router = express.Router();
   const path = '/';
+  
 
   describe('Use ENV aud, alg, iss validation using secret as string', () => {
+    before( function() {
+      if (!process.env.E2E) {
+        this.skip();
+      }
+    })
+
     const token = jwt.sign({
       aud: 'nobody',
       iss: 'foobar'
@@ -28,14 +34,12 @@ describe.skip('Using jwks url endpoint', () => {
       algorithm: 'RS256',
       keyid: 'foobar'
     });
-
     
-
     const options: JwtProxyOptions = {
       jwksUrl: 'http://localhost:5500/tests/private.json'
     }
 
-    before(function () {
+    before( function() {
       app.use(jwtProxy(options));
       // mock express handlers
       app.use('/', genericHandlers(router, path));
