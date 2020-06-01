@@ -50,16 +50,16 @@ describe('Using NO Token', () => {
         //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
-    it('GET /clear/sub should return 200', async () => {
+    it('GET /clear/sub should return 401', async () => {
       const result = await request(app).get('/clear/sub')
         //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(200);
+      expect(result.status).to.eq(401);
     });
 
-    it('GET /clear/file should return 200', async () => {
+    it('GET /clear/file should return 401', async () => {
       const result = await request(app).get('/clear/sub')
         //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(200);
+      expect(result.status).to.eq(401);
     });
 
     it('GET / should return 401', async () => {
@@ -140,6 +140,48 @@ describe('Using VALID Token', () => {
     it('GET /protected/sub should return 200', async () => {
       const result = await request(app).get('/protected/sub')
         .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+  });
+});
+
+describe('Using NO Token', () => {
+  describe('Protect all paths except excluded[] paths-multiple', () => {
+    const app = express();
+    const router = express.Router();
+    const path = '/';
+
+    const testOptions: JwtProxyOptions = {
+      excluded: 
+      [
+        '/clear','/clear/sub'],
+      secretOrKey: publicKey,
+      algorithms: ["RS256"]
+    }
+
+    const token = jwt.sign({
+      aud: 'nobody',
+    }, privateKey, { algorithm: 'RS256' });
+
+    before(function () {
+      app.use(jwtProxy(testOptions));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+      app.use('/clear', genericHandlers(router, path));
+      app.use('/clear/sub', genericHandlers(router, path));
+      app.use('/protected', genericHandlers(router, path));
+      app.use('/protected/sub', genericHandlers(router, path));
+    });
+
+
+    it('GET /clear should return 200', async () => {
+      const result = await request(app).get('/clear')
+        //.set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+    it('GET /clear/sub should return 200', async () => {
+      const result = await request(app).get('/clear/sub')
+        //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
   });

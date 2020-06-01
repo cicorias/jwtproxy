@@ -46,16 +46,16 @@ describe('using a base app url', () => {
       expect(result.status).to.eq(404);
     });
 
-    it('GET /clear/sub should return 404', async () => {
+    it('GET /clear/sub should return 401', async () => {
       const result = await request(app).get('/contonso/v1/clear/sub')
       //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(404);
+      expect(result.status).to.eq(401);
     });
 
-    it('GET /clear/file should return 404', async () => {
+    it('GET /clear/file should return 401', async () => {
       const result = await request(app).get('/contonso/v1/clear/sub')
       //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(404);
+      expect(result.status).to.eq(401);
     });
 
     it('GET / should return 401', async () => {
