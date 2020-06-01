@@ -119,7 +119,7 @@ class App {
 }
 
 const options: JwtProxyOptions = {
-  algorithms: ['HS256'],
+  algorithms: [ 'RS256','HS256'],
   excluded: ['/status', '/sign'],
   secretOrKey: sharedSecret
 }
