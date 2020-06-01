@@ -32,13 +32,29 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
   return async function jwtVerifyMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
     logger('verifying a jwt token with options %o' + proxyOptions);
 
+    //this first block is a short circuit on ecluced paths.
+    //need tests: 1) proxy and ENV are set, both with excluded - only options is used. warn on ENV settings ignored
     //First check if this path is excluded and bail if true
-    if (proxyOptions?.excluded) {
-      if (indexOf(proxyOptions.excluded, request.originalUrl)) {
-        next();
-        return;
+    if (proxyOptions) {
+      if (proxyOptions.excluded) {
+        if (indexOf(proxyOptions.excluded, request.originalUrl)) {
+          next();
+          return;
+        }
       }
     }
+    else { //options are not provided so 
+      //grab from env if exists; split and loop on ',' separators
+      const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWPT_EXCLUDE : undefined;
+      if (envExcludes != undefined) {
+        const excludes = envExcludes.split(',');
+        if (indexOf(excludes, request.originalUrl)) {
+          next();
+          return;
+        }
+      }
+    }
+
 
     //grab the header if it is there.
     const authHeader = request.headers.authorization;
@@ -75,6 +91,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
       let secretOrKey = '';
 
+      //while we checked this above, we have more complex checks here.
       if (proxyOptions) {
 
         if (proxyOptions.secretOrKey) {

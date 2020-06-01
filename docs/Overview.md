@@ -79,6 +79,7 @@ The presence of an `options` object precludes any `env` variables to be used for
 - JWTP_URL: string
 - JWTP_ISS: string
 - JWTP_AUD: string = 'myaudience'
+- JWTP_EXCLUDE: string = /path1,path2/  -- 
 
 It is NOT expected in the `env` use case that the `JWTP_URL` will be used as a `function` type. Either a pure `PEM` public key for signature verification or a proper `URL` to a Jwks Host endpoint that provide key material.
 
