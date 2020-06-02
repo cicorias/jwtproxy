@@ -14,6 +14,7 @@ declare function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler;
 export default jwtProxy;
 /** Options for THIS middlware */
 export interface JwtProxyOptions {
+    disable?: boolean | undefined;
     secretOrKey?: string;
     audience?: string;
     issuer?: string;
