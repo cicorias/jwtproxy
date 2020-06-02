@@ -33,7 +33,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 function fastIndexOf(subject, target) {
     for (let i = 0; i < subject.length; i++) {
-        if (target.startsWith(subject[i])) {
+        if (target.toLowerCase() === subject[i].toLowerCase()) {
             return true;
         }
     }

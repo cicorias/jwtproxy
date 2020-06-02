@@ -33,7 +33,7 @@ SOFTWARE.} source
 export default function fastIndexOf(subject: string[], target: string): boolean {
 
   for (let i = 0; i < subject.length; i++) {
-    if (target.startsWith(subject[i])) {
+    if (target.toLowerCase()===subject[i].toLowerCase()){
       return true;
     }
   }
