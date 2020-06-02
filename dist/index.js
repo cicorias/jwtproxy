@@ -1,4 +1,18 @@
 "use strict";
+/*! *****************************************************************************
+Copyright (c) 2020 Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -9,7 +23,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const HttpException_1 = require("./HttpException");
-const indexOf_1 = __importDefault(require("./indexOf"));
+//import indexOf from './indexOf';
 const JwksHelper_1 = require("./JwksHelper");
 dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy');
@@ -36,7 +50,7 @@ function jwtProxy(proxyOptions) {
         //First check if this path is excluded and bail if true
         if (proxyOptions) {
             if (proxyOptions.excluded) {
-                if (indexOf_1.default(proxyOptions.excluded, request.originalUrl)) {
+                if (fastIndexOf(proxyOptions.excluded, request.originalUrl)) {
                     next();
                     return;
                 }
@@ -47,7 +61,7 @@ function jwtProxy(proxyOptions) {
             const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWTP_EXCLUDE : undefined;
             if (envExcludes != undefined) {
                 const excludes = envExcludes.split(',');
-                if (indexOf_1.default(excludes, request.originalUrl)) {
+                if (fastIndexOf(excludes, request.originalUrl)) {
                     next();
                     return;
                 }
@@ -144,4 +158,18 @@ function jwtProxy(proxyOptions) {
     };
 }
 exports.default = jwtProxy;
+/**
+ * Does an indexOf from a array/object against a target and optional key
+ * @param {string[]} subject - the source array or object.
+ * @param {string} target - the value to lookup.
+ * @returns {boolean} the index value where found or -1 if not found
+ */
+function fastIndexOf(subject, target) {
+    for (let i = 0; i < subject.length; i++) {
+        if (target.toLowerCase() === subject[i].toLowerCase()) {
+            return true;
+        }
+    }
+    return false;
+}
 //# sourceMappingURL=index.js.map

@@ -1,3 +1,18 @@
+/*! *****************************************************************************
+Copyright (c) 2020 Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
 import colors from 'colors';
 import debug from 'debug';
 import dotenv from 'dotenv';
@@ -5,7 +20,7 @@ import { NextFunction, Request, RequestHandler, Response } from 'express';
 import jwt, { Algorithm, VerifyOptions } from 'jsonwebtoken';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { InvalidJwtToken, InvalidOption, NoJwtException } from './HttpException';
-import indexOf from './indexOf';
+//import indexOf from './indexOf';
 import { checkUrl, getKey } from './JwksHelper';
 
 dotenv.config();
@@ -50,7 +65,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
     //First check if this path is excluded and bail if true
     if (proxyOptions) {
       if (proxyOptions.excluded) {
-        if (indexOf(proxyOptions.excluded, request.originalUrl)) {
+        if (fastIndexOf(proxyOptions.excluded, request.originalUrl)) {
           next();
           return;
         }
@@ -61,7 +76,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
       const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWTP_EXCLUDE : undefined;
       if (envExcludes != undefined) {
         const excludes = envExcludes.split(',');
-        if (indexOf(excludes, request.originalUrl)) {
+        if (fastIndexOf(excludes, request.originalUrl)) {
           next();
           return;
         }
@@ -188,3 +203,18 @@ export interface JwtProxyOptions {
   excluded?: string[]
 }
 
+/**
+ * Does an indexOf from a array/object against a target and optional key
+ * @param {string[]} subject - the source array or object.
+ * @param {string} target - the value to lookup.
+ * @returns {boolean} the index value where found or -1 if not found
+ */
+function fastIndexOf(subject: string[], target: string): boolean {
+
+  for (let i = 0; i < subject.length; i++) {
+    if (target.toLowerCase()===subject[i].toLowerCase()){
+      return true;
+    }
+  }
+  return false;
+}
