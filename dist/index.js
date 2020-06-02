@@ -17,6 +17,17 @@ const logDebug = debug_1.default('jwtproxy:debug');
 const tokenPrefix = "Bearer "; // is 7 characters
 const failedCode = 401;
 function jwtProxy(proxyOptions) {
+    /** short circuit and if disabled just a simple no op middleware */
+    const envDisabled = process.env.JWTP_DISABLE == null ? false : process.env.JWTP_DISABLE.toLowerCase() === 'true';
+    const optDisabled = proxyOptions === null || proxyOptions === void 0 ? void 0 : proxyOptions.disable;
+    if (optDisabled || envDisabled) {
+        logger('jwt proxy disabled - no jwt verification will occure');
+        return async (req, res, next) => {
+            next();
+            return;
+        };
+    }
+    /** normal middleware when enabled */
     return async function jwtVerifyMiddleware(request, response, next) {
         var _a;
         logger('verifying a jwt token with options %o' + proxyOptions);

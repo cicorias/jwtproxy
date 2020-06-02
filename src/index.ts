@@ -29,6 +29,19 @@ declare global {
 }
 
 function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
+  /** short circuit and if disabled just a simple no op middleware */
+  const envDisabled: boolean = process.env.JWTP_DISABLE == null ? false : process.env.JWTP_DISABLE.toLowerCase() === 'true';
+  const optDisabled = proxyOptions?.disable as boolean;
+  if (optDisabled || envDisabled)
+  {
+    logger('jwt proxy disabled - no jwt verification will occure'); 
+    return async (req:Request, res:Response, next:NextFunction): Promise<void> =>{
+      next();
+      return;
+    }
+  }
+
+  /** normal middleware when enabled */
   return async function jwtVerifyMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
     logger('verifying a jwt token with options %o' + proxyOptions);
 
@@ -166,6 +179,7 @@ export default jwtProxy;
 
 /** Options for THIS middlware */
 export interface JwtProxyOptions {
+  disable?: boolean|undefined,
   secretOrKey?: string,
   audience?: string,
   issuer?: string,

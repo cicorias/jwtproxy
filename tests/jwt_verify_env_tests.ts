@@ -35,6 +35,13 @@ describe('Using Environment using secret as string.', () => {
       process.env.JWTP_AUD = 'nobody';
     });
 
+    after(function() {
+      delete process.env.JWTP_ALG;
+      delete process.env.JWTP_URL;
+      delete process.env.JWTP_ISS;
+      delete process.env.JWTP_AUD;
+    })
+
     it('GET / should return 200', async () => {
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
@@ -76,6 +83,18 @@ describe('Using Environment using secret as string.', () => {
       process.env.JWTP_ISS = 'foobar';
       process.env.JWTP_AUD = 'nobody';
     });
+
+    after(function() {
+      delete process.env.JWTP_ALG;
+      delete process.env.JWTP_URL;
+      delete process.env.JWTP_ISS;
+      delete process.env.JWTP_AUD;
+    })
+    
+    afterEach(function(){
+      delete process.env.JWTP_AUD;
+    })
+
 
     it('GET / should return 401 - invalid aud', async () => {
       process.env.JWTP_AUD = 'someone';

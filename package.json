@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build .",
+    "build:watch": "tsc --build . -w",
     "clean": "npx rimraf ./dist",
     "dev:static": "ts-node ./src/server.ts",
     "dev": "nodemon",
