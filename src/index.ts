@@ -45,7 +45,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
     }
     else { //options are not provided so 
       //grab from env if exists; split and loop on ',' separators
-      const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWPT_EXCLUDE : undefined;
+      const envExcludes = process.env.JWTP_EXCLUDE ? process.env.JWTP_EXCLUDE : undefined;
       if (envExcludes != undefined) {
         const excludes = envExcludes.split(',');
         if (indexOf(excludes, request.originalUrl)) {
