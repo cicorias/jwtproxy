@@ -29,7 +29,7 @@ dotenv_1.default.config();
 const logger = debug_1.default('jwtproxy');
 const logDebug = debug_1.default('jwtproxy:debug');
 const tokenPrefix = "Bearer "; // is 7 characters
-const failedCode = 401;
+let failedCode = 401;
 function jwtProxy(proxyOptions) {
     /** short circuit and if disabled just a simple no op middleware */
     const envDisabled = process.env.JWTP_DISABLE == null ? false : process.env.JWTP_DISABLE.toLowerCase() === 'true';
@@ -102,7 +102,7 @@ function jwtProxy(proxyOptions) {
                     verifyOptions.algorithms = proxyOptions.algorithms;
                 }
                 if (proxyOptions.audience) {
-                    verifyOptions.audience = proxyOptions.audience;
+                    verifyOptions.audience = proxyOptions.audience.split(";");
                 }
                 if (proxyOptions.issuer) {
                     verifyOptions.issuer = proxyOptions.issuer;
@@ -125,7 +125,7 @@ function jwtProxy(proxyOptions) {
                 //TODO: deal with multiple algorithms supplied.
                 verifyOptions.algorithms = [process.env.JWTP_ALG];
                 verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
-                verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
+                verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD.split(";") : '';
             }
             if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
                 logger('No matching alogorithm present - returning 401: %o', alg);
@@ -134,6 +134,16 @@ function jwtProxy(proxyOptions) {
             if (secretOrKey.length > 0) {
                 jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err) => {
                     if (err) {
+                        if (err.message.indexOf('audience') > 0) {
+                            failedCode = 403;
+                            throw new HttpException_1.InvalidAudience(err.message);
+                        }
+                        //TODO: maybe we need switches for iss, sub, nonce, iat?
+                        //TODO: on what 40x to throw for each?
+                        // if (err.message.indexOf('issuer') > 0) {
+                        //   failedCode = 403;
+                        //   throw new InvalidIssuer(err.message);
+                        // }
                         throw new HttpException_1.InvalidJwtToken(err);
                     }
                 });
@@ -146,6 +156,9 @@ function jwtProxy(proxyOptions) {
             return;
         }
         catch (error) {
+            //we try to send a generic 401 as we do not want to reveal too much
+            //if we give out too much information then attackers know more about
+            //what changes with different attempts.
             logger(colors_1.default.red('failed jwt validation %o'), error.message);
             response.set({
                 'Cache-Control': 'no-cache, no-store, must-revalidate',

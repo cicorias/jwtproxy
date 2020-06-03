@@ -19,7 +19,7 @@ import dotenv from 'dotenv';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import jwt, { Algorithm, VerifyOptions } from 'jsonwebtoken';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { InvalidJwtToken, InvalidOption, NoJwtException } from './HttpException';
+import { InvalidJwtToken, InvalidOption, NoJwtException, InvalidAudience, InvalidIssuer } from './HttpException';
 //import indexOf from './indexOf';
 import { checkUrl, getKey } from './JwksHelper';
 
@@ -28,7 +28,7 @@ dotenv.config();
 const logger = debug('jwtproxy')
 const logDebug = debug('jwtproxy:debug')
 const tokenPrefix = "Bearer "; // is 7 characters
-const failedCode = 401;
+let failedCode = 401;
 
 /**
  * this allows adding to the Express.Request object.
@@ -164,6 +164,17 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
       if (secretOrKey.length > 0) {
         jwt.verify(token, secretOrKey, verifyOptions, (err) => {
           if (err) {
+            if (err.message.indexOf('audience') > 0){
+              failedCode = 403;
+              throw new InvalidAudience(err.message);
+            }
+            //TODO: maybe we need switches for iss, sub, nonce, iat?
+            //TODO: on what 40x to throw for each?
+            // if (err.message.indexOf('issuer') > 0) {
+            //   failedCode = 403;
+            //   throw new InvalidIssuer(err.message);
+            // }
+
             throw new InvalidJwtToken(err);
           }
         });
@@ -178,6 +189,9 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
     }
     catch (error) {
+      //we try to send a generic 401 as we do not want to reveal too much
+      //if we give out too much information then attackers know more about
+      //what changes with different attempts.
       logger(colors.red('failed jwt validation %o'), error.message);
       response.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',

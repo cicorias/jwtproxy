@@ -29,3 +29,9 @@ export declare class InvalidJwtToken extends HttpException {
 export declare class InvalidJwksUrl extends HttpException {
     constructor(msg?: string);
 }
+export declare class InvalidAudience extends HttpException {
+    constructor(msg?: string);
+}
+export declare class InvalidIssuer extends HttpException {
+    constructor(msg?: string);
+}

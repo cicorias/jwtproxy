@@ -47,3 +47,15 @@ export class InvalidJwksUrl extends HttpException {
   }
 }
 
+export class InvalidAudience extends HttpException {
+  constructor(msg?: string) {
+    super(403, 'Invalid Audience ' + msg);
+  }
+}
+
+export class InvalidIssuer extends HttpException {
+  constructor(msg?: string) {
+    super(401, 'Invalid Issuer ' + msg);
+  }
+}
+
