@@ -124,4 +124,57 @@ describe('Using Environment using secret as string.', () => {
       expect(result.status).to.eq(401);
     });
   });
+
+  describe('Use ENV aud, alg, iss validation using secret as string and multiple aud values', () => {
+    const token = jwt.sign({
+      aud: 'nobody',
+      iss: 'foobar'
+    }, privateKey, { algorithm: 'RS256' });
+
+    before(function () {
+      app.use(jwtProxy());
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+      process.env.JWTP_ALG = 'RS256';
+      process.env.JWTP_URL = publicKey;
+      process.env.JWTP_ISS = 'foobar';
+      process.env.JWTP_AUD = 'nobody';
+    });
+
+    after(function() {
+      delete process.env.JWTP_ALG;
+      delete process.env.JWTP_URL;
+      delete process.env.JWTP_ISS;
+      delete process.env.JWTP_AUD;
+    })
+    
+    afterEach(function(){
+      delete process.env.JWTP_AUD;
+    })
+
+
+    it('GET / should return 200 - valid aud', async () => {
+      process.env.JWTP_AUD = 'someone;nobody';
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+
+    it('GET / should return 401 - invalid aud', async () => {
+      process.env.JWTP_AUD = 'someone';
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(401);
+    });
+
+    it('GET / should return 401 - all invalid aud', async () => {
+      process.env.JWTP_AUD = 'noone;someone';
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(401);
+    });
+
+
+  });
+
 })

@@ -129,7 +129,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
           verifyOptions.algorithms = proxyOptions.algorithms;
         }
         if (proxyOptions.audience) {
-          verifyOptions.audience = proxyOptions.audience;
+          verifyOptions.audience = proxyOptions.audience.split(";");
         }
         if (proxyOptions.issuer) {
           verifyOptions.issuer = proxyOptions.issuer;
@@ -153,7 +153,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
         //TODO: deal with multiple algorithms supplied.
         verifyOptions.algorithms = [process.env.JWTP_ALG as Algorithm];
         verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
-        verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD : '';
+        verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD.split(";") : '';
       }
 
       if (!verifyOptions.algorithms?.includes(alg)) {

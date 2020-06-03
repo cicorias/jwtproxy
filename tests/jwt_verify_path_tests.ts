@@ -143,6 +143,71 @@ describe('Using VALID Token', () => {
       expect(result.status).to.eq(200);
     });
   });
+
+  describe('Aud with multiple values with all invalid values', () => {
+    const app = express();
+    const router = express.Router();
+    const path = '/';
+
+    const testOptions: JwtProxyOptions = {
+      excluded: [
+        '/clear'],
+      secretOrKey: publicKey,
+      algorithms: ["RS256"],
+      audience: 'noone;someone'
+    }
+
+    const token = jwt.sign({
+      aud: 'nobody',
+    }, privateKey, { algorithm: 'RS256' });
+
+    before(function () {
+      app.use(jwtProxy(testOptions));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+    });
+
+
+    it('GET / should return 401-invalid aud', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(401);
+    });
+    
+  });
+
+  describe('Aud with multiple values with one valid value', () => {
+    const app = express();
+    const router = express.Router();
+    const path = '/';
+
+    const testOptions: JwtProxyOptions = {
+      excluded: [
+        '/clear'],
+      secretOrKey: publicKey,
+      algorithms: ["RS256"],
+      audience: 'nobody;someone'
+    }
+
+    const token = jwt.sign({
+      aud: 'nobody',
+    }, privateKey, { algorithm: 'RS256' });
+
+    before(function () {
+      app.use(jwtProxy(testOptions));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+    });
+
+
+    it('GET / should return 200-valid aud', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(200);
+    });
+    
+  });
+
 });
 
 describe('Using NO Token', () => {
