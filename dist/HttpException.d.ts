@@ -35,3 +35,6 @@ export declare class InvalidAudience extends HttpException {
 export declare class InvalidIssuer extends HttpException {
     constructor(msg?: string);
 }
+export declare class InvalidAlgorithm extends HttpException {
+    constructor(msg?: string);
+}

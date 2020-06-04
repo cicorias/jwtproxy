@@ -52,8 +52,6 @@ describe('test all http VERBS are intercepted', () => {
   describe('different signature', () => {
     const app = express();
     const router = express.Router();
-    const secret = 'nonsharedsecret';
-    // const token = jwt.sign({ foo: 'bar' }, secret);
     const path = '/';
 
     before(function () {

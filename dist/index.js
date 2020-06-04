@@ -122,14 +122,14 @@ function jwtProxy(proxyOptions) {
                         secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
                     }
                 }
-                //TODO: deal with multiple algorithms supplied.
                 verifyOptions.algorithms = [process.env.JWTP_ALG];
                 verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
                 verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD.split(";") : '';
             }
             if (!((_a = verifyOptions.algorithms) === null || _a === void 0 ? void 0 : _a.includes(alg))) {
                 logger('No matching alogorithm present - returning 401: %o', alg);
-                throw new HttpException_1.InvalidOption('No matching alogorithm present');
+                failedCode = 403;
+                throw new HttpException_1.InvalidAlgorithm('No matching alogorithm present');
             }
             if (secretOrKey.length > 0) {
                 jsonwebtoken_1.default.verify(token, secretOrKey, verifyOptions, (err) => {
@@ -138,18 +138,20 @@ function jwtProxy(proxyOptions) {
                             failedCode = 403;
                             throw new HttpException_1.InvalidAudience(err.message);
                         }
-                        //TODO: maybe we need switches for iss, sub, nonce, iat?
-                        //TODO: on what 40x to throw for each?
-                        // if (err.message.indexOf('issuer') > 0) {
-                        //   failedCode = 403;
-                        //   throw new InvalidIssuer(err.message);
-                        // }
+                        if (err.message.indexOf('issuer') > 0) {
+                            failedCode = 403;
+                            throw new HttpException_1.InvalidIssuer(err.message);
+                        }
+                        if (err.message.indexOf('algorithm') > 0) {
+                            failedCode = 403;
+                            throw new HttpException_1.InvalidAudience(err.message);
+                        }
                         throw new HttpException_1.InvalidJwtToken(err);
                     }
                 });
             }
             else {
-                throw new HttpException_1.InvalidJwtToken(Error("Empty secret or key"));
+                throw new HttpException_1.InvalidOption("Empty secret or key");
             }
             //made it this far so onwards.
             next();

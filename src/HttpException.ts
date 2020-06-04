@@ -55,7 +55,13 @@ export class InvalidAudience extends HttpException {
 
 export class InvalidIssuer extends HttpException {
   constructor(msg?: string) {
-    super(401, 'Invalid Issuer ' + msg);
+    super(403, 'Invalid Issuer ' + msg);
+  }
+}
+
+export class InvalidAlgorithm extends HttpException {
+  constructor(msg?: string) {
+    super(403, 'Invalid Algorithm ' + msg);
   }
 }
 

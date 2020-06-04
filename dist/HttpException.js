@@ -14,7 +14,7 @@ See the Apache Version 2.0 License for specific language governing permissions
 and limitations under the License.
 ***************************************************************************** */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InvalidIssuer = exports.InvalidAudience = exports.InvalidJwksUrl = exports.InvalidJwtToken = exports.InvalidOption = exports.NoJwtException = exports.HttpException = void 0;
+exports.InvalidAlgorithm = exports.InvalidIssuer = exports.InvalidAudience = exports.InvalidJwksUrl = exports.InvalidJwtToken = exports.InvalidOption = exports.NoJwtException = exports.HttpException = void 0;
 class HttpException extends Error {
     constructor(status, message, baseError) {
         super(message + (baseError === null || baseError === void 0 ? void 0 : baseError.message));
@@ -55,8 +55,14 @@ class InvalidAudience extends HttpException {
 exports.InvalidAudience = InvalidAudience;
 class InvalidIssuer extends HttpException {
     constructor(msg) {
-        super(401, 'Invalid Issuer ' + msg);
+        super(403, 'Invalid Issuer ' + msg);
     }
 }
 exports.InvalidIssuer = InvalidIssuer;
+class InvalidAlgorithm extends HttpException {
+    constructor(msg) {
+        super(403, 'Invalid Algorithm ' + msg);
+    }
+}
+exports.InvalidAlgorithm = InvalidAlgorithm;
 //# sourceMappingURL=HttpException.js.map
