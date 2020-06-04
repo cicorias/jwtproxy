@@ -1,15 +1,14 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 import { expect } from 'chai';
+import express, { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 // import assert from 'assert';
 import 'mocha';
-import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import colors from 'colors';
+import jwtProxy, { JwtProxyOptions } from '../src/index';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { genericHandlers } from './handlers2';
-import jwtProxy, { JwtProxyOptions } from '../src/index'
 
 describe('test all http VERBS are intercepted', () => {
   describe('GET / header presence first ', () => {
@@ -18,46 +17,34 @@ describe('test all http VERBS are intercepted', () => {
     const path = '/';
 
     before(function () {
-      router.all('*', jwtProxy());
+      app.use(jwtProxy());
       // mock express handlers
       app.use('/', genericHandlers(router, path));
-
-      // this supresses the stack trace - std Express error handler
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(colors.red("my error handler"));
-        res.sendStatus(res.statusCode);
-        //next();
-      });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      router.all('*', (e: Error, r: Request, res: Response, n: NextFunction) => {
-        console.error(colors.red("my error handler"));
-      })
     });
 
     it('GET should return 401', async () => {
       const result = await request(app).get('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('POST should return 401', async () => {
       const result = await request(app).post('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('PUT should return 401', async () => {
       const result = await request(app).put('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('OPTIONS should return 401', async () => {
       const result = await request(app).options('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('HEAD should return 401', async () => {
       const result = await request(app).head('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('DELETE should return 401', async () => {
       const result = await request(app).delete('/');
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
   });
 
@@ -66,25 +53,14 @@ describe('test all http VERBS are intercepted', () => {
     const app = express();
     const router = express.Router();
     const secret = 'nonsharedsecret';
-    const token = jwt.sign({ foo: 'bar' }, secret);
+    // const token = jwt.sign({ foo: 'bar' }, secret);
     const path = '/';
 
     before(function () {
-      // mocker..
-      router.all('*', function (req: Request, res: Response, next: NextFunction) {
-        req.headers.authorization = 'Bearer ' + token;
-        next();
-      });
       // Norml middleware usage..0
-      router.all('*', jwtProxy());
+      app.use(jwtProxy());
       // mock express handlers
       app.use('/', genericHandlers(router, path));
-
-      // this supresses the stack trace - std Express error handler
-      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        res.sendStatus(res.statusCode);
-        next();
-      });
 
     });
 
@@ -122,22 +98,10 @@ describe('test all http VERBS are intercepted', () => {
     }
 
     before(function () {
-      // mocker..
-      router.all('*', function (req: Request, res: Response, next: NextFunction) {
-        req.headers.authorization = 'Bearer ' + token;
-        next();
-      });
       // Norml middleware usage..0
-      router.all('*', jwtProxy(options));
+      app.use(jwtProxy(options));
       // mock express handlers
       app.use('/', genericHandlers(router, path));
-
-      // this supresses the stack trace - std Express error handler
-      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(error.message);
-        res.sendStatus(res.statusCode);
-        next();
-      });
 
     });
 
@@ -145,6 +109,7 @@ describe('test all http VERBS are intercepted', () => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer ' + token)
         .expect(200, done);
     });
   });
@@ -163,13 +128,8 @@ describe('Mandatory algorithms check in options', () => {
     }
 
     before(function () {
-      // mocker..
-      router.all('*', function (req: Request, res: Response, next: NextFunction) {
-        req.headers.authorization = 'Bearer ' + token;
-        next();
-      });
       // Norml middleware usage..0
-      router.all('*', jwtProxy(options));
+      app.use(jwtProxy(options));
       // mock express handlers
       app.use('/', genericHandlers(router, path));
 
@@ -186,6 +146,7 @@ describe('Mandatory algorithms check in options', () => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer ' + token)
         .expect(200, done);
     });
 
@@ -209,22 +170,10 @@ describe('Mandatory algorithms check in options', () => {
     }
 
     before(function () {
-      // mocker..
-      router.all('*', function (req: Request, res: Response, next: NextFunction) {
-        req.headers.authorization = 'Bearer ' + token;
-        next();
-      });
       // Norml middleware usage..0
-      router.all('*', jwtProxy(options));
+      app.use(jwtProxy(options));
       // mock express handlers
       app.use('/', genericHandlers(router, path));
-
-      // this supresses the stack trace - std Express error handler
-      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(error.message);
-        res.sendStatus(res.statusCode);
-        next();
-      });
 
     });
 
@@ -232,7 +181,8 @@ describe('Mandatory algorithms check in options', () => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
-        .expect(401, done);
+        .set('Authorization', 'Bearer ' + token)        
+        .expect(401|403, done);
     });
   });
 
@@ -247,22 +197,10 @@ describe('Mandatory algorithms check in options', () => {
     }
 
     before(function () {
-      // mocker..
-      router.all('*', function (req: Request, res: Response, next: NextFunction) {
-        req.headers.authorization = 'Bearer ' + token;
-        next();
-      });
       // Norml middleware usage..0
-      router.all('*', jwtProxy(options));
+      app.use(jwtProxy(options));
       // mock express handlers
       app.use('/', genericHandlers(router, path));
-
-      // this supresses the stack trace - std Express error handler
-      app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(error.message);
-        res.sendStatus(res.statusCode);
-        next();
-      });
 
     });
 
@@ -270,7 +208,8 @@ describe('Mandatory algorithms check in options', () => {
       request(app)
         .get(path)
         .set('Accept', 'application/json')
-        .expect(401, done);
+        .set('Authoriztion', 'Bearer ' + token)
+        .expect(401|403, done);
     });
   });
 
