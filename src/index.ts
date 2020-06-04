@@ -19,7 +19,7 @@ import dotenv from 'dotenv';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import jwt, { Algorithm, VerifyOptions } from 'jsonwebtoken';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { InvalidJwtToken, InvalidOption, NoJwtException, InvalidAudience, InvalidIssuer } from './HttpException';
+import { InvalidJwtToken, InvalidOption, NoJwtException, InvalidAlgorithm, InvalidAudience, InvalidIssuer } from './HttpException';
 //import indexOf from './indexOf';
 import { checkUrl, getKey } from './JwksHelper';
 
@@ -158,7 +158,8 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
       if (!verifyOptions.algorithms?.includes(alg)) {
         logger('No matching alogorithm present - returning 401: %o', alg);
-        throw new InvalidOption('No matching alogorithm present');
+        failedCode = 403;
+        throw new InvalidAlgorithm('No matching alogorithm present');
       }
 
       if (secretOrKey.length > 0) {
@@ -168,6 +169,17 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
               failedCode = 403;
               throw new InvalidAudience(err.message);
             }
+
+            if (err.message.indexOf('issuer') > 0){
+              failedCode = 403;
+              throw new InvalidIssuer(err.message);
+            }
+
+            if (err.message.indexOf('algorithm') > 0){
+              failedCode = 403;
+              throw new InvalidAudience(err.message);
+            }
+
             throw new InvalidJwtToken(err);
           }
         });

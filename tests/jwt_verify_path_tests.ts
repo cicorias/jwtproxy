@@ -164,6 +164,70 @@ describe('Using VALID Token', () => {
 
   });
 
+
+  describe('Iss with invalid value', () => {
+    const app = express();
+    const router = express.Router();
+    const path = '/';
+
+    const testOptions: JwtProxyOptions = {
+      excluded: [
+        '/clear'],
+      secretOrKey: publicKey,
+      algorithms: ["RS256"],
+      issuer: 'someone'
+    }
+
+    const token = jwt.sign({
+      iss: 'nobody',
+    }, privateKey, { algorithm: 'RS256' });
+
+    before(function () {
+      app.use(jwtProxy(testOptions));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+    });
+
+
+    it('GET / should return 403-invalid iss', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(403);
+    });
+
+  });
+
+  describe('Alg with invalid value', () => {
+    const app = express();
+    const router = express.Router();
+    const path = '/';
+
+    const testOptions: JwtProxyOptions = {
+      excluded: [
+        '/clear'],
+      secretOrKey: publicKey,
+      algorithms: ["RS256"],
+
+    }
+
+    const token = jwt.sign({
+    }, privateKey, { algorithm: 'HS384' });
+
+    before(function () {
+      app.use(jwtProxy(testOptions));
+      // mock express handlers
+      app.use('/', genericHandlers(router, path));
+    });
+
+
+    it('GET / should return 403-invalid alg', async () => {
+      const result = await request(app).get('/')
+        .set('Authorization', 'Bearer ' + token);
+      expect(result.status).to.eq(403);
+    });
+
+  });
+
   describe('Aud with multiple values with one valid value', () => {
     const app = express();
     const router = express.Router();
