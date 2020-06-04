@@ -1,12 +1,10 @@
 /* eslint-disable no-undef */
 import { expect } from 'chai';
 import fs from 'fs';
-// import assert from 'assert';
 import 'mocha';
 import express from 'express';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-//import colors from 'colors';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { genericHandlers } from './handlers2';
 import jwtProxy from '../src/index'
@@ -92,36 +90,39 @@ describe('Using Environment using secret as string.', () => {
     })
     
     afterEach(function(){
+      delete process.env.JWTP_ALG;
+      delete process.env.JWTP_URL;
+      delete process.env.JWTP_ISS;
       delete process.env.JWTP_AUD;
     })
 
 
-    it('GET / should return 401 - invalid aud', async () => {
+    it('GET / should return 403 - invalid aud', async () => {
       process.env.JWTP_AUD = 'someone';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(403);
     });
 
     it('GET / should return 401 - invalid iss', async () => {
       process.env.JWTP_ISS = 'someone';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET / should return 401 - invalid alg - but real', async () => {
       process.env.JWTP_ALG = 'HS256';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET / should return 401 - invalid alg - but fake', async () => {
       process.env.JWTP_ALG = 'ZZZZ';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
   });
 
@@ -164,14 +165,14 @@ describe('Using Environment using secret as string.', () => {
       process.env.JWTP_AUD = 'someone';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET / should return 401 - all invalid aud', async () => {
       process.env.JWTP_AUD = 'noone;someone';
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
 

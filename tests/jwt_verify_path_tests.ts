@@ -1,15 +1,13 @@
 /* eslint-disable no-undef */
 import { expect } from 'chai';
+import express from 'express';
 import fs from 'fs';
-// import assert from 'assert';
-import 'mocha';
-import express, { Request, Response, NextFunction } from 'express';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import colors from 'colors';
+import 'mocha';
+import request from 'supertest';
+import jwtProxy, { JwtProxyOptions } from '../src/index';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { genericHandlers } from './handlers2';
-import jwtProxy, { JwtProxyOptions } from '../src/index'
 
 const privateKey = fs.readFileSync(__dirname + '/private.pem', 'utf-8');
 const publicKey = fs.readFileSync(__dirname + '/public.pem', 'utf-8');
@@ -23,16 +21,12 @@ describe('Using NO Token', () => {
     const path = '/';
 
     const testOptions: JwtProxyOptions = {
-      excluded: 
-      [
-        '/clear'],
+      excluded:
+        [
+          '/clear'],
       secretOrKey: publicKey,
       algorithms: ["RS256"]
     }
-
-    const token = jwt.sign({
-      aud: 'nobody',
-    }, privateKey, { algorithm: 'RS256' });
 
     before(function () {
       app.use(jwtProxy(testOptions));
@@ -47,36 +41,30 @@ describe('Using NO Token', () => {
 
     it('GET /clear should return 200', async () => {
       const result = await request(app).get('/clear')
-        //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
     it('GET /clear/sub should return 401', async () => {
       const result = await request(app).get('/clear/sub')
-        //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET /clear/file should return 401', async () => {
       const result = await request(app).get('/clear/sub')
-        //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET / should return 401', async () => {
       const result = await request(app).get('/')
-        //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
 
     it('GET /protected should return 401', async () => {
       const result = await request(app).get('/protected')
-        //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
     it('GET /protected/sub should return 401', async () => {
       const result = await request(app).get('/protected/sub')
-        //.set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(401|403);
     });
   });
 });
@@ -168,12 +156,12 @@ describe('Using VALID Token', () => {
     });
 
 
-    it('GET / should return 401-invalid aud', async () => {
+    it('GET / should return 403-invalid aud', async () => {
       const result = await request(app).get('/')
         .set('Authorization', 'Bearer ' + token);
-      expect(result.status).to.eq(401);
+      expect(result.status).to.eq(403);
     });
-    
+
   });
 
   describe('Aud with multiple values with one valid value', () => {
@@ -205,7 +193,7 @@ describe('Using VALID Token', () => {
         .set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
-    
+
   });
 
 });
@@ -217,16 +205,12 @@ describe('Using NO Token', () => {
     const path = '/';
 
     const testOptions: JwtProxyOptions = {
-      excluded: 
-      [
-        '/clear','/clear/sub'],
+      excluded:
+        [
+          '/clear', '/clear/sub'],
       secretOrKey: publicKey,
       algorithms: ["RS256"]
     }
-
-    const token = jwt.sign({
-      aud: 'nobody',
-    }, privateKey, { algorithm: 'RS256' });
 
     before(function () {
       app.use(jwtProxy(testOptions));
@@ -241,12 +225,12 @@ describe('Using NO Token', () => {
 
     it('GET /clear should return 200', async () => {
       const result = await request(app).get('/clear')
-        //.set('Authorization', 'Bearer ' + token);
+      //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
     it('GET /clear/sub should return 200', async () => {
       const result = await request(app).get('/clear/sub')
-        //.set('Authorization', 'Bearer ' + token);
+      //.set('Authorization', 'Bearer ' + token);
       expect(result.status).to.eq(200);
     });
   });

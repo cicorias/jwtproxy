@@ -150,7 +150,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
             secretOrKey = (process.env.JWTP_URL) ? process.env.JWTP_URL : '';
           }
         }
-        //TODO: deal with multiple algorithms supplied.
+
         verifyOptions.algorithms = [process.env.JWTP_ALG as Algorithm];
         verifyOptions.issuer = (process.env.JWTP_ISS) ? process.env.JWTP_ISS : '';
         verifyOptions.audience = (process.env.JWTP_AUD) ? process.env.JWTP_AUD.split(";") : '';
@@ -168,19 +168,12 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
               failedCode = 403;
               throw new InvalidAudience(err.message);
             }
-            //TODO: maybe we need switches for iss, sub, nonce, iat?
-            //TODO: on what 40x to throw for each?
-            // if (err.message.indexOf('issuer') > 0) {
-            //   failedCode = 403;
-            //   throw new InvalidIssuer(err.message);
-            // }
-
             throw new InvalidJwtToken(err);
           }
         });
       }
       else {
-        throw new InvalidJwtToken(Error("Empty secret or key"));
+        throw new InvalidOption("Empty secret or key");
       }
     
       //made it this far so onwards.
