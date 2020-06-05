@@ -177,7 +177,7 @@ function jwtProxy(proxyOptions?: JwtProxyOptions): RequestHandler {
 
             if (err.message.indexOf('algorithm') > 0){
               failedCode = 403;
-              throw new InvalidAudience(err.message);
+              throw new InvalidAlgorithm(err.message);
             }
 
             throw new InvalidJwtToken(err);
