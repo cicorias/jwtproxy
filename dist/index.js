@@ -144,7 +144,7 @@ function jwtProxy(proxyOptions) {
                         }
                         if (err.message.indexOf('algorithm') > 0) {
                             failedCode = 403;
-                            throw new HttpException_1.InvalidAudience(err.message);
+                            throw new HttpException_1.InvalidAlgorithm(err.message);
                         }
                         throw new HttpException_1.InvalidJwtToken(err);
                     }
