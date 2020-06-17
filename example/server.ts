@@ -5,15 +5,8 @@ import express, { Application, Request, Response, NextFunction, RequestHandler }
 import bodyParser from 'body-parser';
 import jwtProxy, { JwtProxyOptions } from '../dist/index'
 
-
-
-
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
-
-
 dotenv.config();
-
-// https://dev.to/aligoren/developing-an-express-application-using-typescript-3b1
 
 const loggerMiddleware = (req: Request, resp: Response, next: NextFunction) => {
   console.log('Request logged:', req.method, req.path);
@@ -75,11 +68,13 @@ class SignController {
 class App {
   public app: Application
   public port: number
+  public hostname: string
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor (appInit: { port: number; middleWares: RequestHandler[]; controllers: any; }) {
+  constructor (appInit: { port: number; host?: string, middleWares: RequestHandler[]; controllers: any; }) {
     this.app = express()
     this.port = appInit.port
+    this.hostname = appInit.host || 'localhost'
 
     this.middlewares(appInit.middleWares)
     this.routes(appInit.controllers)
@@ -112,8 +107,8 @@ class App {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public listen () {
-    this.app.listen(this.port, () => {
-      console.log(`App listening on the http://localhost:${this.port}`)
+    this.app.listen(this.port, this.hostname, () => {
+      console.log(`App listening on the http://${this.hostname}:${this.port}`)
     })
   }
 }
@@ -125,7 +120,8 @@ const options: JwtProxyOptions = {
 }
 
 const appWrapper = new App({
-  port: (!process.env.PORT) ? 5000 : parseInt(process.env.PORT),
+  port: process.env.PORT ? parseInt(process.env.PORT) : 5000,
+  host: process.env.HOST || 'localhost',
   controllers: [
     new UserController(),
     new StatusController(),

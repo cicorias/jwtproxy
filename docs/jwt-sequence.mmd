@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant User
+  participant App
+  participant Module
+  participant KeyHelper
+  participant JwksHost
+  App->>+Module: Options?
+  Note left of Module: optional and if present <br/> than NO env variables are used. 
+  User->>+App: api(h:jwt)
+  App->>+Module: verify(jwt)
+  Module->>Module: decode(kid,claims)
+  Note Right of Module: decode but not verify <br/>
+  Module->>+KeyHelper: getKey(decoded token, kid)
+  alt Local or Remote
+    KeyHelper->>+JwksHost: getKeys()
+  else
+    KeyHelper->>KeyHelper: getKey(kid, filePath)
+    Note right of KeyHelper: developer and test experience <br/> without relying on <br/>external Jwks Host [A]
+  end
+  KeyHelper-->>-Module: key for kid
+  Module-->>-App: done
+  App-->>-User: ok/not ok
+
+

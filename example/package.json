@@ -14,7 +14,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "npx tsc --build ."
+    "build": "tsc --build .",
+    "ci" : "npm ci",
+    "fresh": "npx npm-run-all ci build start"
   },
   "keywords": [],
   "author": "Shawn Cicoria <github@cicoria.com> (https://cicoria.com)",

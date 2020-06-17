@@ -1,6 +1,6 @@
 {
   "name": "jwtproxy",
-  "version": "1.6.5",
+  "version": "1.6.7",
   "description": "simple jwt validation proxy for express",
   "main": "./dist/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "test:watch": "watch  -c npm run test -- --reporter min",
     "preversion": "npm test",
     "version": "npm run build && git add -Af dist",
-    "postversion": "git push && git push --tags && rm -rf build/temp"
+    "postversion": "git push && git push --tags && npx rimraf build/temp"
   },
   "files": [
     "src/",
