@@ -11,7 +11,6 @@ var body_parser_1 = __importDefault(require("body-parser"));
 var index_1 = __importDefault(require("../dist/index"));
 /** This is a demo server used to test and validate the actual middleware which is in index.ts */
 dotenv_1.default.config();
-// https://dev.to/aligoren/developing-an-express-application-using-typescript-3b1
 var loggerMiddleware = function (req, resp, next) {
     console.log('Request logged:', req.method, req.path);
     next();
@@ -67,6 +66,7 @@ var App = /** @class */ (function () {
     function App(appInit) {
         this.app = express_1.default();
         this.port = appInit.port;
+        this.hostname = appInit.host || 'localhost';
         this.middlewares(appInit.middleWares);
         this.routes(appInit.controllers);
         this.assets();
@@ -96,8 +96,8 @@ var App = /** @class */ (function () {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     App.prototype.listen = function () {
         var _this = this;
-        this.app.listen(this.port, function () {
-            console.log("App listening on the http://localhost:" + _this.port);
+        this.app.listen(this.port, this.hostname, function () {
+            console.log("App listening on the http://" + _this.hostname + ":" + _this.port);
         });
     };
     return App;
@@ -108,7 +108,8 @@ var options = {
     secretOrKey: sharedSecret
 };
 var appWrapper = new App({
-    port: (!process.env.PORT) ? 5000 : parseInt(process.env.PORT),
+    port: process.env.PORT ? parseInt(process.env.PORT) : 5000,
+    host: process.env.HOST || 'localhost',
     controllers: [
         new UserController(),
         new StatusController(),
